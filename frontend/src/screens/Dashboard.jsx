@@ -14,16 +14,17 @@ import { fetchRoutes, handleGraphParams } from '../actions';
 
 function Dashboard(props) {
   const { routes, myFetchRoutes, myHandleGraphParams } = props;
+  setHeader();
 
   // for now, only supports 1 agency at a time.
   // todo: support multiple agencies on one map
   const agency = Agencies[0];
 
   useEffect(() => {
-    myHandleGraphParams({agencyId: agency.id}); // temporary hack, probably should remove once frontend can show routes from multiple agencies at once
+    myHandleGraphParams({ agencyId: agency.id }); // temporary hack, probably should remove once frontend can show routes from multiple agencies at once
 
     if (!routes) {
-      myFetchRoutes({agencyId: agency.id});
+      myFetchRoutes({ agencyId: agency.id });
     }
   }, [routes, myFetchRoutes, myHandleGraphParams, agency]); // like componentDidMount, this runs only on first render
 
@@ -51,6 +52,10 @@ function Dashboard(props) {
   );
 }
 
+const setHeader = () => {
+  window.document.title = 'Dashboard | OpenTransit';
+};
+
 const mapStateToProps = state => ({
   routes: state.routes.routes,
 });
@@ -60,7 +65,4 @@ const mapDispatchToProps = dispatch => ({
   myHandleGraphParams: props => dispatch(handleGraphParams(props)),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(Dashboard);
+export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);

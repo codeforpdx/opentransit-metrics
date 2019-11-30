@@ -591,7 +591,12 @@ class Isochrone extends React.Component {
     );
   }
 
+  setHeader() {
+    window.document.title = 'Isochrone | OpenTransit';
+  }
+
   render() {
+    this.setHeader();
     const { routes } = this.props;
 
     const colors = [];
