@@ -6,8 +6,10 @@ import {
   YAxis,
   VerticalRectSeries,
   ChartLabel,
+  LineMarkSeries,
   Crosshair,
 } from 'react-vis';
+import Moment from 'moment';
 import { AppBar, Box, Tab, Tabs, Typography } from '@material-ui/core';
 import InfoByDay from './InfoByDay';
 import InfoIntervalsOfDay from './InfoIntervalsOfDay';
@@ -96,11 +98,24 @@ function Info(props) {
   }
 
   const SUMMARY = 0;
-  const BY_DAY = 1;
-  const TIME_OF_DAY = 2;
-  const HEADWAYS = 3;
-  const WAITS = 4;
-  const TRIPS = 5;
+  const TRIP_TIMES = 1;
+  const HEADWAYS = 2;
+  const ON_TIME_PERFORMANCE = 3;
+  const TRIP_CHART = 4;
+
+  const onTimeRateData =
+    byDayData &&
+    byDayData.map(dayData => {
+      const scheduleAdherence = dayData.departureScheduleAdherence;
+      return {
+        x: Moment(dayData.dates[0]).format('dd MM/DD'),
+        y:
+          scheduleAdherence && scheduleAdherence.scheduledCount > 0
+            ? (100 * scheduleAdherence.onTimeCount) /
+              scheduleAdherence.scheduledCount
+            : null,
+      };
+    });
 
   return (
     <div>
@@ -118,241 +133,314 @@ function Info(props) {
             label="Summary"
             {...a11yProps(SUMMARY)}
           />
-          <Tab style={{ minWidth: 72 }} label="By Day" {...a11yProps(BY_DAY)} />
           <Tab
             style={{ minWidth: 72 }}
-            label="By Time of Day"
-            {...a11yProps(TIME_OF_DAY)}
+            label="Trip Times"
+            {...a11yProps(TRIP_TIMES)}
           />
           <Tab
             style={{ minWidth: 72 }}
-            label="Headways"
+            label="Service Frequency"
             {...a11yProps(HEADWAYS)}
           />
           <Tab
             style={{ minWidth: 72 }}
-            label="Wait Times"
-            {...a11yProps(WAITS)}
+            label="On-Time Performance"
+            {...a11yProps(ON_TIME_PERFORMANCE)}
           />
           <Tab
             style={{ minWidth: 72 }}
-            label="Trip Times"
-            {...a11yProps(TRIPS)}
+            label="Trip Chart"
+            {...a11yProps(TRIP_CHART)}
           />
         </Tabs>
       </AppBar>
 
       {headways && routes ? (
         <div>
-          <Box p={2} hidden={tabValue !== SUMMARY}>
-            <InfoTripSummary
-              tripMetrics={tripMetrics}
-              graphParams={graphParams}
-              routes={routes}
-            />
-          </Box>
-
-          <Box p={2} hidden={tabValue !== BY_DAY}>
-            <Typography variant="h5" display="inline">
-              Performance by Day
-            </Typography>
-
-            <InfoByDay
-              byDayData={byDayData}
-              graphParams={graphParams}
-              routes={routes}
-            />
-          </Box>
-
-          <Box p={2} hidden={tabValue !== TIME_OF_DAY}>
-            <Typography variant="h5" display="inline">
-              Performance by Time of Day
-            </Typography>
-
-            <InfoIntervalsOfDay tripMetrics={tripMetrics} />
-          </Box>
-
-          <Box p={2} hidden={tabValue !== HEADWAYS}>
-            <Typography variant="h5" display="inline">
-              Headways (Time Between Vehicles)
-            </Typography>
-            <p>
-              {headways.count + 1} arrivals, median headway{' '}
-              {Math.round(headways.median)} minutes, max headway{' '}
-              {Math.round(headways.max)} minutes
-            </p>
-            <XYPlot
-              xDomain={[0, Math.max(60, Math.round(headways.max) + 5)]}
-              height={200}
-              width={400}
-              onMouseLeave={onMouseLeave}
-            >
-              <HorizontalGridLines />
-              <XAxis />
-              <YAxis hideLine />
-
-              <VerticalRectSeries
-                data={headwayData}
-                onNearestX={onNearestXHeadway}
-                stroke="white"
-                fill={CHART_COLORS[0]}
-                style={{ strokeWidth: 2 }}
+          {tabValue === SUMMARY ? (
+            <Box p={2}>
+              <InfoTripSummary
+                tripMetrics={tripMetrics}
+                graphParams={graphParams}
+                routes={routes}
               />
-
-              <ChartLabel
-                text="arrivals"
-                className="alt-y-label"
-                includeMargin={false}
-                xPercent={0.06}
-                yPercent={0.06}
-                style={{
-                  transform: 'rotate(-90)',
-                  textAnchor: 'end',
-                }}
-              />
-
-              <ChartLabel
-                text="minutes"
-                className="alt-x-label"
-                includeMargin={false}
-                xPercent={0.9}
-                yPercent={0.94}
-              />
-
-              {crosshairValues.headway && (
-                <Crosshair
-                  values={crosshairValues.headway}
-                  style={REACT_VIS_CROSSHAIR_NO_LINE}
-                >
-                  <div className="rv-crosshair__inner__content">
-                    Arrivals: {Math.round(crosshairValues.headway[0].y)}
+            </Box>
+          ) : null}
+          {tabValue === TRIP_TIMES ? (
+            <Box p={2}>
+              {tripMetrics ? (
+                <div>
+                  <Typography variant="h5">
+                    Trip Times by Time of Day
+                  </Typography>
+                  <InfoIntervalsOfDay tripMetrics={tripMetrics} />
+                </div>
+              ) : null}
+              {tripMetrics && graphParams.date !== graphParams.startDate ? (
+                <div>
+                  <Typography variant="h5">Trip Times by Day</Typography>
+                  <InfoByDay
+                    byDayData={byDayData}
+                    graphParams={graphParams}
+                    routes={routes}
+                  />
+                </div>
+              ) : null}
+              {waitTimes ? (
+                <div>
+                  <Typography variant="h5">
+                    Distribution of Wait Times
+                  </Typography>
+                  <div>
+                    median wait time {Math.round(waitTimes.median)} minutes, max
+                    wait time {Math.round(waitTimes.max)} minutes
                   </div>
-                </Crosshair>
-              )}
-            </XYPlot>
-          </Box>
+                  <XYPlot
+                    xDomain={[0, Math.max(60, Math.round(waitTimes.max) + 5)]}
+                    height={200}
+                    width={400}
+                    onMouseLeave={onMouseLeave}
+                  >
+                    <HorizontalGridLines />
+                    <XAxis />
+                    <YAxis hideLine tickFormat={v => `${v}%`} />
+
+                    <VerticalRectSeries
+                      data={waitData}
+                      onNearestX={onNearestXWaitTimes}
+                      stroke="white"
+                      fill={CHART_COLORS[0]}
+                      style={{ strokeWidth: 2 }}
+                    />
+
+                    <ChartLabel
+                      text="chance"
+                      className="alt-y-label"
+                      includeMargin={false}
+                      xPercent={0.06}
+                      yPercent={0.06}
+                      style={{
+                        transform: 'rotate(-90)',
+                        textAnchor: 'end',
+                      }}
+                    />
+
+                    <ChartLabel
+                      text="minutes"
+                      className="alt-x-label"
+                      includeMargin={false}
+                      xPercent={0.9}
+                      yPercent={0.94}
+                    />
+
+                    {crosshairValues.wait && (
+                      <Crosshair
+                        values={crosshairValues.wait}
+                        style={REACT_VIS_CROSSHAIR_NO_LINE}
+                      >
+                        <div className="rv-crosshair__inner__content">
+                          Chance: {Math.round(crosshairValues.wait[0].y)}%
+                        </div>
+                      </Crosshair>
+                    )}
+                  </XYPlot>
+                  TODO - show scheduled distribution of wait times
+                  <br />
+                  <br />
+                </div>
+              ) : null}
+              {tripTimes ? (
+                <div>
+                  <Typography variant="h5">
+                    Distribution of Travel Times
+                  </Typography>
+                  <div>
+                    {tripTimes.count} trips, median{' '}
+                    {Math.round(tripTimes.median)} minutes, max{' '}
+                    {Math.round(tripTimes.max)} minutes
+                  </div>
+                  <XYPlot
+                    xDomain={[0, Math.max(60, Math.round(tripTimes.max) + 5)]}
+                    height={200}
+                    width={400}
+                    onMouseLeave={onMouseLeave}
+                  >
+                    <HorizontalGridLines />
+                    <XAxis />
+                    <YAxis hideLine />
+
+                    <VerticalRectSeries
+                      data={tripData}
+                      onNearestX={onNearestXTripTimes}
+                      stroke="white"
+                      fill={CHART_COLORS[1]}
+                      style={{ strokeWidth: 2 }}
+                    />
+
+                    <ChartLabel
+                      text="trips"
+                      className="alt-y-label"
+                      includeMargin={false}
+                      xPercent={0.06}
+                      yPercent={0.06}
+                      style={{
+                        transform: 'rotate(-90)',
+                        textAnchor: 'end',
+                      }}
+                    />
+
+                    <ChartLabel
+                      text="minutes"
+                      className="alt-x-label"
+                      includeMargin={false}
+                      xPercent={0.9}
+                      yPercent={0.94}
+                    />
+
+                    {crosshairValues.trip && (
+                      <Crosshair
+                        values={crosshairValues.trip}
+                        style={REACT_VIS_CROSSHAIR_NO_LINE}
+                      >
+                        <div className="rv-crosshair__inner__content">
+                          Trips: {Math.round(crosshairValues.trip[0].y)}
+                        </div>
+                      </Crosshair>
+                    )}
+                  </XYPlot>
+                  TODO - show scheduled distribution of travel times
+                </div>
+              ) : null}
+            </Box>
+          ) : null}
+          {tabValue === HEADWAYS ? (
+            <Box p={2}>
+              <Typography variant="h5">
+                Service Frequency by Time of Day
+              </Typography>
+              TODO - bar chart with actual/scheduled headways
+              <br />
+              <br />
+              <Typography variant="h5">
+                Distribution of Headways (Time Between Vehicles)
+              </Typography>
+              <div>
+                {headways.count} arrivals, median headway{' '}
+                {Math.round(headways.median)} minutes, max headway{' '}
+                {Math.round(headways.max)} minutes
+              </div>
+              <XYPlot
+                xDomain={[0, Math.max(60, Math.round(headways.max) + 5)]}
+                height={200}
+                width={400}
+                onMouseLeave={onMouseLeave}
+              >
+                <HorizontalGridLines />
+                <XAxis />
+                <YAxis hideLine />
+
+                <VerticalRectSeries
+                  data={headwayData}
+                  onNearestX={onNearestXHeadway}
+                  stroke="white"
+                  fill={CHART_COLORS[0]}
+                  style={{ strokeWidth: 2 }}
+                />
+
+                <ChartLabel
+                  text="arrivals"
+                  className="alt-y-label"
+                  includeMargin={false}
+                  xPercent={0.06}
+                  yPercent={0.06}
+                  style={{
+                    transform: 'rotate(-90)',
+                    textAnchor: 'end',
+                  }}
+                />
+
+                <ChartLabel
+                  text="minutes"
+                  className="alt-x-label"
+                  includeMargin={false}
+                  xPercent={0.9}
+                  yPercent={0.94}
+                />
+
+                {crosshairValues.headway && (
+                  <Crosshair
+                    values={crosshairValues.headway}
+                    style={REACT_VIS_CROSSHAIR_NO_LINE}
+                  >
+                    <div className="rv-crosshair__inner__content">
+                      Arrivals: {Math.round(crosshairValues.headway[0].y)}
+                    </div>
+                  </Crosshair>
+                )}
+              </XYPlot>
+              TODO - show scheduled distribution of headways
+              <br />
+              <br />
+              <Typography variant="h5">Headway Adherence</Typography>
+              TODO - distribution of differences between actual headways and
+              scheduled headways
+            </Box>
+          ) : null}
+          {tabValue === ON_TIME_PERFORMANCE ? (
+            <Box p={2}>
+              <Typography variant="h5">
+                On-Time Performance by Time of Day
+              </Typography>
+              TODO - bar chart with departure/arrival on-time %
+              <br />
+              <br />
+              {graphParams.date !== graphParams.startDate ? (
+                <div>
+                  <Typography variant="h5">
+                    On-Time Performance By Day
+                  </Typography>
+                  <XYPlot
+                    xType="ordinal"
+                    height={300}
+                    width={400}
+                    margin={{ left: 40, right: 10, top: 10, bottom: 60 }}
+                    yDomain={[0, 100]}
+                  >
+                    <HorizontalGridLines />
+                    <XAxis tickLabelAngle={-90} />
+                    <YAxis hideLine />
+                    <LineMarkSeries
+                      data={onTimeRateData}
+                      getNull={d => d.y !== null}
+                      color={CHART_COLORS[0]}
+                      stack
+                    />
+                    <ChartLabel
+                      text="%"
+                      className="alt-y-label"
+                      includeMargin={false}
+                      xPercent={0.06}
+                      yPercent={0.06}
+                      style={{
+                        transform: 'rotate(-90)',
+                        textAnchor: 'end',
+                      }}
+                    />
+                  </XYPlot>
+                  TODO - show arrival schedule adherence
+                </div>
+              ) : null}
+              <br />
+              <Typography variant="h5">Schedule Adherence</Typography>
+              TODO - distribution of differences between actual arrival time and
+              scheduled arrival time
+            </Box>
+          ) : null}
         </div>
       ) : null}
-
-      {waitTimes ? (
-        <Box p={2} hidden={tabValue !== WAITS}>
-          <Typography variant="h5" display="inline">
-            Wait Times
-          </Typography>
-          <p>
-            median wait time {Math.round(waitTimes.median)} minutes, max wait
-            time {Math.round(waitTimes.max)} minutes
-          </p>
-          <XYPlot
-            xDomain={[0, Math.max(60, Math.round(waitTimes.max) + 5)]}
-            height={200}
-            width={400}
-            onMouseLeave={onMouseLeave}
-          >
-            <HorizontalGridLines />
-            <XAxis />
-            <YAxis hideLine tickFormat={v => `${v}%`} />
-
-            <VerticalRectSeries
-              data={waitData}
-              onNearestX={onNearestXWaitTimes}
-              stroke="white"
-              fill={CHART_COLORS[0]}
-              style={{ strokeWidth: 2 }}
-            />
-
-            <ChartLabel
-              text="chance"
-              className="alt-y-label"
-              includeMargin={false}
-              xPercent={0.06}
-              yPercent={0.06}
-              style={{
-                transform: 'rotate(-90)',
-                textAnchor: 'end',
-              }}
-            />
-
-            <ChartLabel
-              text="minutes"
-              className="alt-x-label"
-              includeMargin={false}
-              xPercent={0.9}
-              yPercent={0.94}
-            />
-
-            {crosshairValues.wait && (
-              <Crosshair
-                values={crosshairValues.wait}
-                style={REACT_VIS_CROSSHAIR_NO_LINE}
-              >
-                <div className="rv-crosshair__inner__content">
-                  Chance: {Math.round(crosshairValues.wait[0].y)}%
-                </div>
-              </Crosshair>
-            )}
-          </XYPlot>
-        </Box>
-      ) : null}
-      {tripTimes ? (
-        <Box p={2} hidden={tabValue !== TRIPS}>
-          <Typography variant="h5" display="inline">
-            Trip Times
-          </Typography>
-          <p>
-            {tripTimes.count} trips, median {Math.round(tripTimes.median)}{' '}
-            minutes, max {Math.round(tripTimes.max)} minutes
-          </p>
-          <XYPlot
-            xDomain={[0, Math.max(60, Math.round(tripTimes.max) + 5)]}
-            height={200}
-            width={400}
-            onMouseLeave={onMouseLeave}
-          >
-            <HorizontalGridLines />
-            <XAxis />
-            <YAxis hideLine />
-
-            <VerticalRectSeries
-              data={tripData}
-              onNearestX={onNearestXTripTimes}
-              stroke="white"
-              fill={CHART_COLORS[1]}
-              style={{ strokeWidth: 2 }}
-            />
-
-            <ChartLabel
-              text="trips"
-              className="alt-y-label"
-              includeMargin={false}
-              xPercent={0.06}
-              yPercent={0.06}
-              style={{
-                transform: 'rotate(-90)',
-                textAnchor: 'end',
-              }}
-            />
-
-            <ChartLabel
-              text="minutes"
-              className="alt-x-label"
-              includeMargin={false}
-              xPercent={0.9}
-              yPercent={0.94}
-            />
-
-            {crosshairValues.trip && (
-              <Crosshair
-                values={crosshairValues.trip}
-                style={REACT_VIS_CROSSHAIR_NO_LINE}
-              >
-                <div className="rv-crosshair__inner__content">
-                  Trips: {Math.round(crosshairValues.trip[0].y)}
-                </div>
-              </Crosshair>
-            )}
-          </XYPlot>
-        </Box>
+      {tabValue === TRIP_CHART ? (
+        <Box p={2}>TODO: Marey chart between from/to stops</Box>
       ) : null}
 
       {tripMetricsError ? (

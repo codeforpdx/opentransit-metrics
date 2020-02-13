@@ -74,13 +74,25 @@ export function fetchTripMetrics(params) {
     route(routeId:$routeId) {
       trip(startStopId:$startStopId, endStopId:$endStopId, directionId:$directionId) {
         interval(dates:$dates, startTime:$startTime, endTime:$endTime) {
+          departures
+          scheduledDepartures
+          arrivals
+          scheduledArrivals
           headways {
+            count median max
+            histogram { binStart binEnd count }
+          }
+          scheduledHeadways {
+            count median max
+            histogram { binStart binEnd count }
+          }
+          tripTimes {
             count median max
             percentiles(percentiles:[90]) { percentile value }
             histogram { binStart binEnd count }
           }
-          tripTimes {
-            count median avg max
+          scheduledTripTimes {
+            count median max
             percentiles(percentiles:[90]) { percentile value }
             histogram { binStart binEnd count }
           }
@@ -89,7 +101,16 @@ export function fetchTripMetrics(params) {
             percentiles(percentiles:[90]) { percentile value }
             histogram { binStart binEnd count }
           }
+          scheduledWaitTimes {
+            median max
+            percentiles(percentiles:[90]) { percentile value }
+            histogram { binStart binEnd count }
+          }
           departureScheduleAdherence {
+            onTimeCount
+            scheduledCount
+          }
+          arrivalScheduleAdherence {
             onTimeCount
             scheduledCount
           }

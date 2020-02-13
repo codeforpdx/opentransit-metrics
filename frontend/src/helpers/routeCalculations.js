@@ -49,7 +49,7 @@ export function metersToMiles(meters) {
 export function computeScores(medianWait, onTimeRate, speed, variability) {
   const medianWaitScoreScale = d3
     .scaleLinear()
-    .domain([5, 10])
+    .domain([2.5, 12.5])
     .rangeRound([100, 0])
     .clamp(true);
 
@@ -65,43 +65,16 @@ export function computeScores(medianWait, onTimeRate, speed, variability) {
     .rangeRound([0, 100])
     .clamp(true);
 
-  // score for travel time variability
-  // where variability is 90th percentile trip time minus 10th percentile trip time
-
-  const variabilityScoreScale = d3
-    .scaleLinear()
-    .domain([10, 20])
-    .rangeRound([100, 0])
-    .clamp(true);
-
   const medianWaitScore =
     medianWait != null ? medianWaitScoreScale(medianWait) : null;
   const onTimeRateScore =
     onTimeRate != null ? onTimeRateScoreScale(onTimeRate) : null;
   const speedScore = speed != null ? speedScoreScale(speed) : null;
-  const travelVarianceScore =
-    variability != null ? variabilityScoreScale(variability) : null;
-
-  const totalScore =
-    medianWaitScore != null &&
-    onTimeRateScore != null &&
-    speedScore != null &&
-    travelVarianceScore != null
-      ? Math.round(
-          (medianWaitScore +
-            onTimeRateScore +
-            speedScore +
-            travelVarianceScore) /
-            4.0,
-        )
-      : null;
 
   return {
     medianWaitScore,
     onTimeRateScore,
     speedScore,
-    travelVarianceScore,
-    totalScore,
   };
 }
 

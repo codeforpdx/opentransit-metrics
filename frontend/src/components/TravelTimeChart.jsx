@@ -236,6 +236,8 @@ function TravelTimeChart(props) {
       {distanceForDirection != null ? distanceForDirection.toFixed(1) : '?'} mi
       &nbsp;&nbsp; Stops: {numStops > 0 ? numStops : '?'} &nbsp;&nbsp; Completed
       trips: {numTrips != null ? numTrips : '0'}
+      <br />
+      TODO - show scheduled travel time along route
     </Fragment>
   ) : (
     <Fragment>Select a direction to see the travel time chart.</Fragment>

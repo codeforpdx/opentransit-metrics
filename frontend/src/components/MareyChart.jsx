@@ -253,7 +253,7 @@ function MareyChart(props) {
 
   if (!mareyChartSupported) {
     return (
-      <div>The Marey chart is only available when viewing a single date.</div>
+      <div>The trip chart is only available when viewing a single date.</div>
     );
   }
 
@@ -364,7 +364,7 @@ function MareyChart(props) {
 
   return processedArrivals ? (
     <Fragment>
-      <Typography variant="h5">Marey chart</Typography>
+      <Typography variant="h5">Trip chart</Typography>
       Vehicle runs: {series.length} <br />
       <FormControl>
         <div className="controls">

@@ -11,7 +11,6 @@ import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
 import { makeStyles } from '@material-ui/core/styles';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
-import Rating from '@material-ui/lab/Rating';
 import Box from '@material-ui/core/Box';
 import {
   scoreBackgroundColor,
@@ -26,7 +25,6 @@ import {
 export default function InfoScoreCard(props) {
   const {
     score,
-    hideRating,
     title,
     largeValue,
     smallValue,
@@ -54,13 +52,11 @@ export default function InfoScoreCard(props) {
   }
 
   const cardStyle = {
-    background: score != null ? scoreBackgroundColor(score) : 'gray',
+    background: score != null ? scoreBackgroundColor(score) : 'white',
     color: score != null ? scoreContrastColor(score) : 'black',
     margin: 4,
+    minWidth: 150,
   };
-
-  const rating =
-    score != null ? Math.max(Math.round(score / 10.0) / 2.0, 0.5) : 0;
 
   return (
     <Fragment>
@@ -82,9 +78,6 @@ export default function InfoScoreCard(props) {
             <Typography variant="h5" display="inline">
               {smallValue}
             </Typography>
-            {hideRating ? null : (
-              <Rating readOnly size="small" value={rating} precision={0.5} />
-            )}
           </Box>
           <Box
             display="flex"

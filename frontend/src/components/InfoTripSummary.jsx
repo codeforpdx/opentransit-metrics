@@ -9,8 +9,11 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  TableHead,
   Typography,
 } from '@material-ui/core';
+
+import Chip from '@material-ui/core/Chip';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
@@ -29,6 +32,7 @@ import { PLANNING_PERCENTILE, TENTH_PERCENTILE } from '../UIConstants';
 import { getPercentileValue } from '../helpers/graphData';
 import InfoScoreCard from './InfoScoreCard';
 import InfoScoreLegend from './InfoScoreLegend';
+import SummaryRow from './SummaryRow';
 
 /**
  * Renders an "nyc bus stats" style summary of a route and direction.
@@ -56,10 +60,27 @@ export default function InfoTripSummary(props) {
   }
 
   const { tripMetrics, graphParams, routes } = props;
-  const waitTimes = tripMetrics ? tripMetrics.interval.waitTimes : null;
-  const tripTimes = tripMetrics ? tripMetrics.interval.tripTimes : null;
-  const scheduleAdherence = tripMetrics
-    ? tripMetrics.interval.departureScheduleAdherence
+
+  const intervalMetrics = tripMetrics ? tripMetrics.interval : null;
+
+  const waitTimes = intervalMetrics ? intervalMetrics.waitTimes : null;
+  const scheduledWaitTimes = intervalMetrics
+    ? intervalMetrics.scheduledWaitTimes
+    : null;
+  const tripTimes = intervalMetrics ? intervalMetrics.tripTimes : null;
+  const scheduledTripTimes = intervalMetrics
+    ? intervalMetrics.scheduledTripTimes
+    : null;
+  const headways = intervalMetrics ? intervalMetrics.headways : null;
+  const scheduledHeadways = intervalMetrics
+    ? intervalMetrics.scheduledHeadways
+    : null;
+
+  const departureScheduleAdherence = intervalMetrics
+    ? intervalMetrics.departureScheduleAdherence
+    : null;
+  const arrivalScheduleAdherence = intervalMetrics
+    ? intervalMetrics.arrivalScheduleAdherence
     : null;
 
   const computeDistance = (myGraphParams, myRoutes) => {
@@ -82,43 +103,24 @@ export default function InfoTripSummary(props) {
 
   const distance = routes ? computeDistance(graphParams, routes) : null;
 
-  const speed =
-    tripTimes && tripTimes.count > 0 && distance
-      ? distance / (tripTimes.avg / 60.0)
-      : 0; // convert avg trip time to hours for mph
+  const getAverageSpeed = tripTimeMetrics => {
+    return tripTimeMetrics && tripTimeMetrics.count > 0 && distance
+      ? distance / (tripTimeMetrics.median / 60.0)
+      : null; // convert avg trip time to hours for mph
+  };
 
-  const onTimeRate =
-    scheduleAdherence && scheduleAdherence.scheduledCount > 0
-      ? scheduleAdherence.onTimeCount / scheduleAdherence.scheduledCount
+  const averageSpeed = getAverageSpeed(tripTimes);
+  const scheduledAverageSpeed = getAverageSpeed(scheduledTripTimes);
+
+  const getOnTimePercent = scheduleAdherence => {
+    return scheduleAdherence && scheduleAdherence.scheduledCount > 0
+      ? (100 * scheduleAdherence.onTimeCount) / scheduleAdherence.scheduledCount
       : null;
+  };
 
-  let travelTimeVariability = null;
-  if (tripTimes) {
-    travelTimeVariability =
-      getPercentileValue(tripTimes, PLANNING_PERCENTILE) -
-      getPercentileValue(tripTimes, TENTH_PERCENTILE);
-  }
-
-  const scores =
-    speed && waitTimes.median
-      ? computeScores(
-          waitTimes.median,
-          onTimeRate,
-          speed,
-          travelTimeVariability,
-        )
-      : {};
-
-  let whyNoData = null;
-  if (!distance) {
-    whyNoData = 'Unable to determine distance between selected stops.';
-  } else if (!tripTimes || !tripTimes.count) {
-    whyNoData = 'No trip data between selected stops.';
-  } else if (!speed) {
-    whyNoData = 'Unable to determine speed between selected stops.';
-  } else if (!waitTimes.median) {
-    whyNoData = 'No median wait time available.';
-  }
+  const planningTravel = Math.round(
+    getPercentileValue(tripTimes, PLANNING_PERCENTILE),
+  );
 
   const useStyles = makeStyles(theme => ({
     uncolored: {
@@ -135,248 +137,325 @@ export default function InfoTripSummary(props) {
   const planningWait = Math.round(
     getPercentileValue(waitTimes, PLANNING_PERCENTILE),
   );
-  const planningTravel = Math.round(
-    getPercentileValue(tripTimes, PLANNING_PERCENTILE),
-  );
 
-  const typicalWait = Math.round(waitTimes.median);
-  const typicalTravel = Math.round(tripTimes.median); // note: can have NaN issues here due to lack of trip data between stops
-
-  const popoverContentTotalScore = (
-    <Fragment>
-      Trip score of {scores.totalScore} is the average of the following
-      subscores:
-      <Box pt={2}>
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell>Median wait</TableCell>
-              <TableCell align="right">{scores.medianWaitScore}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Long wait probability</TableCell>
-              <TableCell align="right">{scores.longWaitScore}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Speed for median trip</TableCell>
-              <TableCell align="right"> {scores.speedScore}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Travel time variability</TableCell>
-              <TableCell align="right"> {scores.travelVarianceScore}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </Box>
-    </Fragment>
-  );
-
-  const popoverContentWait = (
-    <Fragment>
-      Median wait of{' '}
-      {waitTimes && waitTimes.median != null
-        ? waitTimes.median.toFixed(1)
-        : '--'}{' '}
-      min gets a score of {scores.medianWaitScore}.
-      <Box pt={2}>
-        <InfoScoreLegend
-          rows={[
-            { label: '5 min or less', value: 100 },
-            { label: '6.25 min', value: 75 },
-            { label: '7.5 min', value: 50 },
-            { label: '8.75', value: 25 },
-            { label: '10 min or more', value: 0 },
-          ]}
-        />
-      </Box>
-    </Fragment>
-  );
-
-  const popoverContentOnTimeRate = (
-    <Fragment>
-      The on-time percentage is the percentage of scheduled departure times
-      where a vehicle departed less than 5 minutes after the scheduled departure
-      time or less than 1 minute before the scheduled departure time.
-      Probability of{' '}
-      {(onTimeRate * 100).toFixed(1) /* be more precise than card */}% gets a
-      score of {scores.onTimeRateScore}.
-    </Fragment>
-  );
-
-  const popoverContentSpeed = (
-    <Fragment>
-      Speed for median trip of {speed.toFixed(1)} mph gets a score of{' '}
-      {scores.speedScore}.
-      <Box pt={2}>
-        <InfoScoreLegend
-          rows={[
-            { label: '10 mph or more', value: 100 },
-            { label: '8.75 mph', value: 75 },
-            { label: '7.5 mph', value: 50 },
-            { label: '6.25 mph', value: 25 },
-            { label: '5 mph or less', value: 0 },
-          ]}
-        />
-      </Box>
-    </Fragment>
-  );
-
-  const popoverContentTravelVariability = (
-    <Fragment>
-      Travel time variability is the difference between the 90th percentile
-      travel time and the 10th percentile travel time. This measures how much
-      extra travel time is needed for some trips. Variability of{' '}
-      {`\u00b1${(travelTimeVariability / 2).toFixed(1)}`} min gets a score of{' '}
-      {scores.travelVarianceScore}.
-      <Box pt={2}>
-        <InfoScoreLegend
-          rows={[
-            { label: '5 min or less', value: 100 },
-            { label: '6.25 min', value: 75 },
-            { label: '7.5 min', value: 50 },
-            { label: '8.75 min', value: 25 },
-            { label: '10 min or more', value: 0 },
-          ]}
-        />
-      </Box>
-    </Fragment>
-  );
+  const headerCellStyle = { padding: 6, fontSize: 16 };
 
   return (
     <Fragment>
-      <div style={{ padding: 8 }}>
-        {scores ? (
-          <Fragment>
-            <Grid container spacing={4}>
-              {/* spacing doesn't work exactly right here, just pads the Papers */}
-              <Grid item xs component={Paper} className={classes.uncolored}>
-                <Typography variant="overline">Typical journey</Typography>
-                <br />
-
-                <Typography variant="h3" display="inline">
-                  {typicalWait + typicalTravel}
-                </Typography>
-                <Typography variant="h5" display="inline">
-                  &nbsp;min
-                </Typography>
-
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="flex-end"
-                  pt={2}
-                >
-                  <Typography variant="body1">
-                    <WatchLaterOutlinedIcon
-                      fontSize="small"
-                      style={{ verticalAlign: 'sub' }}
-                    />
-                    &nbsp;
-                    {typicalWait} min
-                    <br />
-                    <StartStopIcon
-                      fontSize="small"
-                      style={{ verticalAlign: 'sub' }}
-                    />
-                    &nbsp;
-                    {typicalTravel} min
-                  </Typography>
-                  <IconButton size="small" onClick={handleTypicalClick}>
-                    <InfoIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Grid>
-
-              <Grid item xs component={Paper} className={classes.uncolored}>
-                <Typography variant="overline">Journey planning</Typography>
-                <br />
-
-                <Typography variant="h3" display="inline">
-                  {planningWait + planningTravel}
-                </Typography>
-                <Typography variant="h5" display="inline">
-                  &nbsp;min
-                </Typography>
-
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="flex-end"
-                  pt={2}
-                >
-                  <Typography variant="body1">
-                    <WatchLaterOutlinedIcon
-                      fontSize="small"
-                      style={{ verticalAlign: 'sub' }}
-                    />
-                    &nbsp;
-                    {planningWait} min
-                    <br />
-                    <StartStopIcon
-                      fontSize="small"
-                      style={{ verticalAlign: 'sub' }}
-                    />
-                    &nbsp;
-                    {planningTravel} min
-                  </Typography>
-                  <IconButton size="small" onClick={handlePlanningClick}>
-                    <InfoIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Grid>
-              <InfoScoreCard
-                score={scores.totalScore}
-                hideRating
-                title="Trip Score"
-                largeValue={
-                  scores.totalScore != null ? scores.totalScore : '--'
+      <div>
+        <Table aria-labelledby="tableTitle">
+          <TableHead>
+            <TableRow>
+              <TableCell align="right" padding="default"></TableCell>
+              <TableCell align="right" padding="default"></TableCell>
+              <TableCell
+                align="right"
+                padding="none"
+                style={headerCellStyle}
+              >
+                Observed
+              </TableCell>
+              <TableCell
+                align="right"
+                padding="none"
+                style={headerCellStyle}
+              >
+                Scheduled
+              </TableCell>
+              <TableCell align="right" padding="none"></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <SummaryRow
+              label="Median Service Frequency"
+              actual={headways ? headways.median : null}
+              scheduled={scheduledHeadways ? scheduledHeadways.median : null}
+              units="min"
+              precision={1}
+              positiveDiffDesc="longer"
+              negativeDiffDesc="shorter"
+              goodDiffDirection={-1}
+              infoContent={
+                <Fragment>
+                  This is the median (50th percentile) time between vehicles
+                  during the service period.
+                </Fragment>
+              }
+            />
+            <SummaryRow
+              label="Median Wait Time"
+              actual={waitTimes ? waitTimes.median : null}
+              scheduled={scheduledWaitTimes ? scheduledWaitTimes.median : null}
+              units="min"
+              precision={1}
+              positiveDiffDesc="longer"
+              negativeDiffDesc="shorter"
+              goodDiffDirection={-1}
+              infoContent={
+                <Fragment>
+                  This is the median time you would expect to wait at the origin
+                  stop for the next vehicle to depart, assuming you arrived at a
+                  random time during the service period without using timetables
+                  or predictions.
+                </Fragment>
+              }
+            />
+            <SummaryRow
+              label="Median Travel Time"
+              actual={tripTimes ? tripTimes.median : null}
+              scheduled={scheduledTripTimes ? scheduledTripTimes.median : null}
+              units="min"
+              precision={1}
+              positiveDiffDesc="longer"
+              negativeDiffDesc="shorter"
+              goodDiffDirection={-1}
+              infoContent={
+                <Fragment>
+                  This is the median (50th percentile) travel time between the
+                  origin stop and the destination stop.
+                </Fragment>
+              }
+            />
+            <SummaryRow
+              label="Average Speed"
+              actual={averageSpeed}
+              scheduled={scheduledAverageSpeed}
+              units="mph"
+              precision={1}
+              positiveDiffDesc="faster"
+              negativeDiffDesc="slower"
+              goodDiffDirection={1}
+              infoContent={
+                <Fragment>
+                  This is the average speed corresponding to the median travel
+                  time (not counting wait time).
+                </Fragment>
+              }
+            />
+            <SummaryRow
+              label="Completed Trips"
+              actual={tripTimes ? tripTimes.count : null}
+              scheduled={scheduledTripTimes ? scheduledTripTimes.count : null}
+              positiveDiffDesc="more"
+              negativeDiffDesc="fewer"
+              goodDiffDirection={1}
+            />
+            <SummaryRow
+              label="Total Departures"
+              actual={intervalMetrics ? intervalMetrics.departures : null}
+              scheduled={
+                intervalMetrics ? intervalMetrics.scheduledDepartures : null
+              }
+              positiveDiffDesc="more"
+              negativeDiffDesc="fewer"
+              goodDiffDirection={1}
+            />
+            <SummaryRow
+              label="Total Arrivals"
+              actual={intervalMetrics ? intervalMetrics.arrivals : null}
+              scheduled={
+                intervalMetrics ? intervalMetrics.scheduledArrivals : null
+              }
+              positiveDiffDesc="more"
+              negativeDiffDesc="fewer"
+              goodDiffDirection={1}
+            />
+            <SummaryRow
+              label="On-Time Departure %"
+              actual={getOnTimePercent(departureScheduleAdherence)}
+              units="%"
+              precision={0}
+              infoContent={
+                  <Fragment>
+                    This is the percentage of scheduled departure times where a
+                    vehicle departed less than 5 minutes after the scheduled
+                    departure time or less than 1 minute before the scheduled
+                    departure time.
+                  </Fragment>
                 }
-                smallValue={`/${HighestPossibleScore}`}
-                bottomContent="&nbsp;"
-                popoverContent={popoverContentTotalScore}
-              />
-              <InfoScoreCard
-                score={scores.medianWaitScore}
-                title="Median Wait"
-                largeValue={Math.round(waitTimes.median)}
-                smallValue="&nbsp;min"
-                bottomContent="&nbsp;"
-                popoverContent={popoverContentWait}
-              />
-              <InfoScoreCard
-                score={scores.onTimeRateScore}
-                title="On-Time %"
-                largeValue={Math.round(onTimeRate * 100)}
-                smallValue="%"
-                bottomContent={
-                  scheduleAdherence
-                    ? `${scheduleAdherence.onTimeCount} times out of ${scheduleAdherence.scheduledCount}`
-                    : null
-                }
-                popoverContent={popoverContentOnTimeRate}
-              />
-              <InfoScoreCard
-                score={scores.speedScore}
-                title="Median Trip Speed"
-                largeValue={speed.toFixed(0)}
-                smallValue="&nbsp;mph"
-                bottomContent={`${
-                  distance != null ? distance.toFixed(1) : '--'
-                } miles`}
-                popoverContent={popoverContentSpeed}
-              />
-              <InfoScoreCard
-                score={scores.travelVarianceScore}
-                title="Travel Time Variability"
-                largeValue={
-                  travelTimeVariability != null
-                    ? `\u00b1${(travelTimeVariability / 2).toFixed(0)}`
-                    : '-'
-                }
-                smallValue="&nbsp;min"
-                bottomContent="&nbsp;"
-                popoverContent={popoverContentTravelVariability}
-              />
+            />
+            <SummaryRow
+              label="On-Time Arrival %"
+              actual={getOnTimePercent(arrivalScheduleAdherence)}
+              units="%"
+              precision={0}
+            />
+            <SummaryRow
+              label="Travel Distance"
+              scheduled={distance}
+              units="mi"
+              precision={1}
+            />
+            <SummaryRow label="Stops" scheduled="TODO" />
+          </TableBody>
+        </Table>
+      </div>
+    </Fragment>
+  );
+
+  /*
+
+        <Fragment>
+          <Grid container spacing={4}>
+            <InfoScoreCard
+              score={scores.speedScore}
+              title="Median Travel Time"
+              largeValue={typicalTravel}
+              smallValue="&nbsp;min"
+              bottomContent={
+                <div>
+                  Scheduled:
+                  <br />
+                  XXX min
+                </div>
+              }
+              popoverContent={
+                <Fragment>
+                  This is the median (50th percentile) travel time between the
+                  origin stop and the destination stop.
+                </Fragment>
+              }
+            />
+
+            <InfoScoreCard
+              score={scores.speedScore}
+              title="Average Speed"
+              largeValue={speed.toFixed(0)}
+              smallValue="&nbsp;mph"
+              bottomContent={
+                <div>
+                  Scheduled:
+                  <br />
+                  XXX mph
+                </div>
+              }
+              popoverContent={
+                <Fragment>
+                  This is the average speed corresponding to the median travel
+                  time (not counting wait time).
+                </Fragment>
+              }
+            />
+
+            <InfoScoreCard
+              title="Median Headway"
+              largeValue="##"
+              smallValue="&nbsp;min"
+              bottomContent={
+                <div>
+                  Scheduled:
+                  <br />
+                  XXX min
+                </div>
+              }
+              popoverContent={
+                <Fragment>
+                  This is the median (50th percentile) time between vehicles
+                  during the service period. The median headway for the entire
+                  route is the median of the median headway for each stop along
+                  the route.
+                </Fragment>
+              }
+            />
+
+            <InfoScoreCard
+              score={scores.medianWaitScore}
+              title="Median Wait"
+              largeValue={Math.round(waitTimes.median)}
+              smallValue="&nbsp;min"
+              bottomContent={
+                <div>
+                  Scheduled:
+                  <br />
+                  XXX min
+                </div>
+              }
+              popoverContent={
+                <Fragment>
+                  This is the median time you would expect to wait at the origin
+                  stop for the next vehicle to depart, assuming you arrived at a
+                  random time during the service period without using timetables
+                  or predictions.
+                </Fragment>
+              }
+            />
+
+            <InfoScoreCard
+              score={scores.onTimeRateScore}
+              title="On-Time Departure %"
+              largeValue={Math.round(onTimeRate * 100)}
+              smallValue="%"
+              bottomContent={
+                scheduleAdherence
+                  ? `${scheduleAdherence.onTimeCount} times out of ${scheduleAdherence.scheduledCount}`
+                  : null
+              }
+              popoverContent={
+                <Fragment>
+                  This is the percentage of scheduled departure times where a
+                  vehicle departed less than 5 minutes after the scheduled
+                  departure time or less than 1 minute before the scheduled
+                  departure time.
+                </Fragment>
+              }
+            />
+            <InfoScoreCard
+              title="On-Time Arrival %"
+              largeValue="##"
+              smallValue="%"
+              bottomContent={scheduleAdherence ? `## times out of ##` : null}
+            />
+
+            <InfoScoreCard
+              title="Travel Distance"
+              largeValue={distance != null ? distance.toFixed(1) : '--'}
+              smallValue="&nbsp;mi"
+              popoverContent={
+                <Fragment>
+                  This is the distance along the route between the start and end
+                  stops, which is used to calculate average speed.
+                </Fragment>
+              }
+            />
+
+            <Grid item xs component={Paper} className={classes.uncolored}>
+              <Typography variant="overline">
+                Suggested planning time
+              </Typography>
+              <br />
+
+              <Typography variant="h3" display="inline">
+                {planningWait + planningTravel}
+              </Typography>
+              <Typography variant="h5" display="inline">
+                &nbsp;min
+              </Typography>
+
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="flex-end"
+                pt={2}
+              >
+                <Typography variant="body1">
+                  <WatchLaterOutlinedIcon
+                    fontSize="small"
+                    style={{ verticalAlign: 'sub' }}
+                  />
+                  &nbsp;
+                  {planningWait} min
+                  <br />
+                  <StartStopIcon
+                    fontSize="small"
+                    style={{ verticalAlign: 'sub' }}
+                  />
+                  &nbsp;
+                  {planningTravel} min
+                </Typography>
+                <IconButton size="small" onClick={handlePlanningClick}>
+                  <InfoIcon fontSize="small" />
+                </IconButton>
+              </Box>
             </Grid>
 
             <Popover
@@ -419,11 +498,7 @@ export default function InfoTripSummary(props) {
                 be added.
               </div>
             </Popover>
-          </Fragment>
-        ) : (
-          `No trip summary (${whyNoData})`
-        )}
-      </div>
-    </Fragment>
-  );
+          </Grid>
+        </Fragment>
+        ) : ( `No trip summary (${whyNoData})` )} */
 }
