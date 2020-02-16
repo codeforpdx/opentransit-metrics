@@ -3,6 +3,7 @@ import { WEEKDAYS, WEEKENDS } from '../UIConstants';
 import {
   isIgnoredRoute,
   addRanks,
+  addAveragesForAllDirections,
   computeScores,
 } from '../helpers/routeCalculations';
 
@@ -136,21 +137,6 @@ export function spiderSelection(state = initialSpiderSelection, action) {
   }
 }
 
-function addAveragesForAllDirections(routeStats, property) {
-  routeStats.forEach(function(stats) {
-    let total = 0;
-    let count = 0;
-    stats.directions.forEach(function(direction) {
-      const directionValue = direction[property];
-      if (directionValue != null) {
-        total += directionValue;
-        count += 1;
-      }
-    });
-    stats[property] = count > 0 ? total / count : null;
-  });
-}
-
 function addScores(stats) {
   Object.assign(
     stats,
@@ -164,19 +150,30 @@ function addScores(stats) {
 }
 
 function makeStatsByRouteId(agencyMetricsData) {
-  const routeStats = agencyMetricsData ? agencyMetricsData.interval.routes : [];
-  const rankedRouteStats = routeStats.filter(
+  const routesStats = agencyMetricsData
+    ? agencyMetricsData.interval.routes
+    : [];
+
+  const averagedProperties = [
+    'medianWaitTime',
+    'averageSpeed',
+    'onTimeRate',
+    'medianHeadway',
+  ];
+  routesStats.forEach(function(routeStats) {
+    averagedProperties.forEach(function(property) {
+      addAveragesForAllDirections(routeStats, property);
+    });
+  });
+
+  /*
+  const rankedRouteStats = routesStats.filter(
     stats =>
       !isIgnoredRoute({
         agencyId: agencyMetricsData.agencyId,
         id: stats.routeId,
       }),
   );
-
-  addAveragesForAllDirections(routeStats, 'medianWaitTime');
-  addAveragesForAllDirections(routeStats, 'averageSpeed');
-  addAveragesForAllDirections(routeStats, 'onTimeRate');
-  addAveragesForAllDirections(routeStats, 'travelTimeVariability');
 
   addRanks(rankedRouteStats, 'medianWaitTime', 1, 'waitRank', 'waitRankCount');
   addRanks(rankedRouteStats, 'averageSpeed', -1, 'speedRank', 'speedRankCount');
@@ -189,7 +186,7 @@ function makeStatsByRouteId(agencyMetricsData) {
     'variabilityRankCount',
   );
 
-  routeStats.forEach(function(stats) {
+  routesStats.forEach(function(stats) {
     addScores(stats);
     stats.directions.forEach(function(dirStats) {
       addScores(dirStats);
@@ -197,10 +194,11 @@ function makeStatsByRouteId(agencyMetricsData) {
   });
 
   addRanks(rankedRouteStats, 'totalScore', -1, 'scoreRank', 'scoreRankCount');
+  */
 
   const statsByRouteId = {};
-  routeStats.forEach(stats => {
-    statsByRouteId[stats.routeId] = stats;
+  routesStats.forEach(routeStats => {
+    statsByRouteId[routeStats.routeId] = routeStats;
   });
 
   return statsByRouteId;
@@ -256,6 +254,19 @@ const initialRouteMetrics = {
 export function routeMetrics(state = initialRouteMetrics, action) {
   switch (action.type) {
     case 'RECEIVED_ROUTE_METRICS':
+      addAveragesForAllDirections(
+        action.data.interval,
+        'scheduledMedianWaitTime',
+      );
+      addAveragesForAllDirections(
+        action.data.interval,
+        'scheduledMedianHeadway',
+      );
+      addAveragesForAllDirections(
+        action.data.interval,
+        'scheduledAverageSpeed',
+      );
+
       return {
         ...state,
         variablesJson: action.variablesJson,

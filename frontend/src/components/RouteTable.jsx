@@ -310,10 +310,9 @@ function RouteTable(props) {
       label: 'Median Service Frequency',
       rowValue: row => {
         return makeChip(
-          'TODO',
-          /* row.medianHeadway == null
+          row.medianHeadway == null
             ? '--'
-            : `${row.medianHeadway.toFixed(0)} min`, */
+            : `${row.medianHeadway.toFixed(0)} min`,
         );
       },
       helpContent: (

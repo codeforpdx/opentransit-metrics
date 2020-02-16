@@ -226,6 +226,11 @@ export function fetchRouteMetrics(params) {
       interval(dates:$dates, startTime:$startTime, endTime:$endTime) {
         directions {
           directionId
+          scheduledMedianHeadway
+          scheduledMedianWaitTime
+          scheduledAverageSpeed(units:"mph")
+          completedTrips
+          scheduledCompletedTrips
           segments {
             fromStopId
             toStopId
@@ -306,9 +311,9 @@ export function fetchAgencyMetrics(params) {
         routeId
         directions {
           directionId
+          medianHeadway
           medianWaitTime
           averageSpeed(units:"mph")
-          travelTimeVariability
           onTimeRate
         }
       }

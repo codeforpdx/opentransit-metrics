@@ -42,9 +42,10 @@ export function getTripPoints(
 
   const fromStopGeometry = dirInfo.stop_geometry[fromStop];
   const toStopGeometry = dirInfo.stop_geometry[toStop];
-  const tripPoints = [];
 
   if (fromStopGeometry && toStopGeometry) {
+    const tripPoints = [];
+
     tripPoints.push(fromStopInfo);
 
     const coords = dirInfo.coords;
@@ -66,27 +67,31 @@ export function getTripPoints(
     }
 
     tripPoints.push(toStopInfo);
+    return tripPoints;
   } // if unknown geometry, draw straight lines between stops
-  else {
-    const stopIds = dirInfo.stops;
 
-    const fromStopIndex = stopIds.indexOf(fromStop);
-    const toStopIndex = stopIds.indexOf(toStop);
-    if (fromStopIndex !== -1 && toStopIndex !== -1) {
-      let startIndex = fromStopIndex;
-      if (dirInfo.loop && toStopIndex <= fromStopIndex) {
-        for (let i = startIndex; i < stopIds.length; i++) {
-          tripPoints.push(routeInfo.stops[stopIds[i]]);
-        }
-        startIndex = 0;
-      }
+  return getTripStops(routeInfo, dirInfo, fromStop, toStop);
+}
 
-      for (let i = startIndex; i <= toStopIndex; i++) {
-        tripPoints.push(routeInfo.stops[stopIds[i]]);
+export function getTripStops(routeInfo, dirInfo, fromStop, toStop) {
+  const stopIds = dirInfo.stops;
+  const fromStopIndex = stopIds.indexOf(fromStop);
+  const toStopIndex = stopIds.indexOf(toStop);
+  const tripStops = [];
+  if (fromStopIndex !== -1 && toStopIndex !== -1) {
+    let startIndex = fromStopIndex;
+    if (dirInfo.loop && toStopIndex <= fromStopIndex) {
+      for (let i = startIndex; i < stopIds.length; i++) {
+        tripStops.push(routeInfo.stops[stopIds[i]]);
       }
+      startIndex = 0;
+    }
+
+    for (let i = startIndex; i <= toStopIndex; i++) {
+      tripStops.push(routeInfo.stops[stopIds[i]]);
     }
   }
-  return tripPoints;
+  return tripStops;
 }
 
 /**

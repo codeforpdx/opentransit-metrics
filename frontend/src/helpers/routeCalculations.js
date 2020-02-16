@@ -160,3 +160,16 @@ export function addRanks(
     stats[rankCountProperty] = rankCount;
   });
 }
+
+export function addAveragesForAllDirections(routeStats, property) {
+  let total = 0;
+  let count = 0;
+  routeStats.directions.forEach(function(direction) {
+    const directionValue = direction[property];
+    if (directionValue != null) {
+      total += directionValue;
+      count += 1;
+    }
+  });
+  routeStats[property] = count > 0 ? total / count : null;
+}

@@ -21,7 +21,10 @@ import InfoScoreLegend from './InfoScoreLegend';
 import TravelTimeChart from './TravelTimeChart';
 import MareyChart from './MareyChart';
 import SummaryRow from './SummaryRow';
-import { HighestPossibleScore } from '../helpers/routeCalculations';
+import {
+  HighestPossibleScore,
+  metersToMiles,
+} from '../helpers/routeCalculations';
 
 /**
  * Renders an "nyc bus stats" style summary of a route and direction.
@@ -29,18 +32,28 @@ import { HighestPossibleScore } from '../helpers/routeCalculations';
  * @param {any} props
  */
 function RouteSummary(props) {
-  const { graphParams, statsByRouteId } = props;
+  const { graphParams, statsByRouteId, routeMetrics, routes } = props;
   const [tabValue, setTabValue] = React.useState(0);
+
+  const routeIntervalMetrics = routeMetrics ? routeMetrics.interval : null;
 
   const { routeId, directionId } = graphParams;
   const routeStats = statsByRouteId[routeId] || { directions: [] };
 
+  const route = routes
+    ? routes.find(thisRoute => thisRoute.id === routeId)
+    : null;
+
   let stats = null;
+  let dirInfo = null;
   if (directionId) {
     stats =
       routeStats.directions.find(
         dirStats => dirStats.directionId === directionId,
       ) || {};
+    dirInfo = route
+      ? route.directions.find(dir => dir.id === directionId)
+      : null;
   } else {
     stats = routeStats;
   }
@@ -119,11 +132,17 @@ function RouteSummary(props) {
               <TableBody>
                 <SummaryRow
                   label="Median Service Frequency"
-                  actual="TODO"
-                  scheduled="TODO"
+                  actual={stats.medianHeadway}
+                  scheduled={
+                    routeIntervalMetrics
+                      ? routeIntervalMetrics.scheduledMedianHeadway
+                      : null
+                  }
                   positiveDiffDesc="longer"
                   negativeDiffDesc="shorter"
                   goodDiffDirection={-1}
+                  precision={1}
+                  units="min"
                   infoContent={
                     <Fragment>
                       This is the median (50th percentile) time between vehicles
@@ -136,8 +155,12 @@ function RouteSummary(props) {
                 <SummaryRow
                   label="Median Wait Time"
                   actual={stats.medianWaitTime}
+                  scheduled={
+                    routeIntervalMetrics
+                      ? routeIntervalMetrics.scheduledMedianWaitTime
+                      : null
+                  }
                   units="min"
-                  scheduled="TODO"
                   precision={1}
                   positiveDiffDesc="longer"
                   negativeDiffDesc="shorter"
@@ -156,7 +179,11 @@ function RouteSummary(props) {
                 <SummaryRow
                   label="Average Speed"
                   actual={stats.averageSpeed}
-                  scheduled="TODO"
+                  scheduled={
+                    routeIntervalMetrics
+                      ? routeIntervalMetrics.scheduledAverageSpeed
+                      : null
+                  }
                   units="mph"
                   precision={1}
                   positiveDiffDesc="faster"
@@ -193,14 +220,32 @@ function RouteSummary(props) {
                   <Fragment>
                     <SummaryRow
                       label="Completed Trips"
-                      scheduled="TODO"
-                      actual="TODO"
+                      actual={
+                        routeIntervalMetrics
+                          ? routeIntervalMetrics.completedTrips
+                          : null
+                      }
+                      scheduled={
+                        routeIntervalMetrics
+                          ? routeIntervalMetrics.scheduledCompletedTrips
+                          : null
+                      }
                       positiveDiffDesc="more"
                       negativeDiffDesc="fewer"
                       goodDiffDirection={1}
                     />
-                    <SummaryRow label="Travel Distance" scheduled="TODO" />
-                    <SummaryRow label="Stops" scheduled="TODO" />
+                    <SummaryRow
+                      label="Travel Distance"
+                      scheduled={
+                        dirInfo ? metersToMiles(dirInfo.distance) : null
+                      }
+                      units="mi"
+                      precision={1}
+                    />
+                    <SummaryRow
+                      label="Stops"
+                      scheduled={dirInfo ? dirInfo.stops.length : null}
+                    />
                   </Fragment>
                 ) : null}
               </TableBody>
@@ -324,6 +369,7 @@ const mapStateToProps = state => ({
   routes: state.routes.data,
   graphParams: state.graphParams,
   statsByRouteId: state.agencyMetrics.statsByRouteId,
+  routeMetrics: state.routeMetrics.data,
 });
 
 export default connect(mapStateToProps)(RouteSummary);

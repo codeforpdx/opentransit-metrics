@@ -17,7 +17,7 @@ export default function SummaryRow(props) {
     infoContent,
   } = props;
 
-  let unitsSuffix = units ? (units != '%' ? (" " + units) : units) : "";
+  const unitsSuffix = units ? (units != '%' ? ` ${units}` : units) : '';
 
   const positiveDiffDesc = props.positiveDiffDesc || 'more';
   const negativeDiffDesc = props.negativeDiffDesc || 'less';
@@ -43,11 +43,12 @@ export default function SummaryRow(props) {
       ? (actual / scheduled - 1) * 100
       : null;
 
-  const diffPercentStr = diffPercent != null ? ("(" + Math.abs(diffPercent).toFixed(0) + "%)") : "";
+  const diffPercentStr =
+    diffPercent != null ? `(${Math.abs(diffPercent).toFixed(0)}%)` : '';
 
-    const diff  =
+  const diff =
     typeof actual === 'number' && typeof scheduled === 'number'
-      ? (actual - scheduled)
+      ? actual - scheduled
       : null;
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -70,45 +71,27 @@ export default function SummaryRow(props) {
   const classes = useStyles();
 
   const cellStyle = {
-     border: 'none',
-     padding: 6,
-     fontSize: 16,
+    border: 'none',
+    padding: 6,
+    fontSize: 16,
   };
 
   return (
     <TableRow hover role="checkbox" tabIndex={-1}>
-      <TableCell
-        component="th"
-        scope="row"
-        padding="none"
-        style={cellStyle}
-      >
+      <TableCell component="th" scope="row" padding="none" style={cellStyle}>
         {props.label}
       </TableCell>
-      <TableCell
-        component="th"
-        scope="row"
-        padding="none"
-style={cellStyle}
-      >
+      <TableCell component="th" scope="row" padding="none" style={cellStyle}>
         {infoContent ? (
           <IconButton size="small" onClick={handleClick}>
             <InfoIcon fontSize="small" />
           </IconButton>
         ) : null}
       </TableCell>
-      <TableCell
-        align="right"
-        padding="none"
-style={cellStyle}
-      >
+      <TableCell align="right" padding="none" style={cellStyle}>
         {renderValue(actual)}
       </TableCell>
-      <TableCell
-        align="right"
-        padding="none"
-style={cellStyle}
-      >
+      <TableCell align="right" padding="none" style={cellStyle}>
         {renderValue(scheduled)}
       </TableCell>
       <TableCell

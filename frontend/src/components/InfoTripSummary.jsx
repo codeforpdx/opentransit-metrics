@@ -27,7 +27,7 @@ import {
   computeScores,
   HighestPossibleScore,
 } from '../helpers/routeCalculations';
-import { getDistanceInMiles } from '../helpers/mapGeometry';
+import { getDistanceInMiles, getTripStops } from '../helpers/mapGeometry';
 import { PLANNING_PERCENTILE, TENTH_PERCENTILE } from '../UIConstants';
 import { getPercentileValue } from '../helpers/graphData';
 import InfoScoreCard from './InfoScoreCard';
@@ -61,6 +61,8 @@ export default function InfoTripSummary(props) {
 
   const { tripMetrics, graphParams, routes } = props;
 
+  const { startStopId, endStopId, directionId } = graphParams;
+
   const intervalMetrics = tripMetrics ? tripMetrics.interval : null;
 
   const waitTimes = intervalMetrics ? intervalMetrics.waitTimes : null;
@@ -83,25 +85,23 @@ export default function InfoTripSummary(props) {
     ? intervalMetrics.arrivalScheduleAdherence
     : null;
 
-  const computeDistance = (myGraphParams, myRoutes) => {
-    if (myGraphParams && myGraphParams.endStopId) {
-      const directionId = myGraphParams.directionId;
-      const routeId = myGraphParams.routeId;
-      const route = myRoutes.find(thisRoute => thisRoute.id === routeId);
-      const directionInfo = route.directions.find(
-        dir => dir.id === directionId,
-      );
-      return getDistanceInMiles(
-        route,
-        directionInfo,
-        myGraphParams.startStopId,
-        myGraphParams.endStopId,
-      );
-    }
-    return 0;
-  };
+  const routeId = graphParams.routeId;
+  const route = routes
+    ? routes.find(thisRoute => thisRoute.id === routeId)
+    : null;
+  const dirInfo = route
+    ? route.directions.find(dir => dir.id === directionId)
+    : null;
 
-  const distance = routes ? computeDistance(graphParams, routes) : null;
+  const tripStops =
+    route && dirInfo && endStopId
+      ? getTripStops(route, dirInfo, startStopId, endStopId)
+      : null;
+
+  const distance =
+    route && dirInfo && endStopId
+      ? getDistanceInMiles(route, dirInfo, startStopId, endStopId)
+      : null;
 
   const getAverageSpeed = tripTimeMetrics => {
     return tripTimeMetrics && tripTimeMetrics.count > 0 && distance
@@ -148,18 +148,10 @@ export default function InfoTripSummary(props) {
             <TableRow>
               <TableCell align="right" padding="default"></TableCell>
               <TableCell align="right" padding="default"></TableCell>
-              <TableCell
-                align="right"
-                padding="none"
-                style={headerCellStyle}
-              >
+              <TableCell align="right" padding="none" style={headerCellStyle}>
                 Observed
               </TableCell>
-              <TableCell
-                align="right"
-                padding="none"
-                style={headerCellStyle}
-              >
+              <TableCell align="right" padding="none" style={headerCellStyle}>
                 Scheduled
               </TableCell>
               <TableCell align="right" padding="none"></TableCell>
@@ -266,13 +258,13 @@ export default function InfoTripSummary(props) {
               units="%"
               precision={0}
               infoContent={
-                  <Fragment>
-                    This is the percentage of scheduled departure times where a
-                    vehicle departed less than 5 minutes after the scheduled
-                    departure time or less than 1 minute before the scheduled
-                    departure time.
-                  </Fragment>
-                }
+                <Fragment>
+                  This is the percentage of scheduled departure times where a
+                  vehicle departed less than 5 minutes after the scheduled
+                  departure time or less than 1 minute before the scheduled
+                  departure time.
+                </Fragment>
+              }
             />
             <SummaryRow
               label="On-Time Arrival %"
@@ -286,7 +278,10 @@ export default function InfoTripSummary(props) {
               units="mi"
               precision={1}
             />
-            <SummaryRow label="Stops" scheduled="TODO" />
+            <SummaryRow
+              label="Stops"
+              scheduled={tripStops ? tripStops.length - 1 : null}
+            />
           </TableBody>
         </Table>
       </div>
