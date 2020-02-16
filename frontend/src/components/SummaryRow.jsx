@@ -88,10 +88,10 @@ export default function SummaryRow(props) {
           </IconButton>
         ) : null}
       </TableCell>
-      <TableCell align="right" padding="none" style={cellStyle}>
+      <TableCell align="right" padding="none" style={{...cellStyle, minWidth: 80}}>
         {renderValue(actual)}
       </TableCell>
-      <TableCell align="right" padding="none" style={cellStyle}>
+      <TableCell align="right" padding="none" style={{...cellStyle, minWidth: 80}}>
         {renderValue(scheduled)}
       </TableCell>
       <TableCell
@@ -99,6 +99,7 @@ export default function SummaryRow(props) {
         padding="none"
         style={{
           ...cellStyle,
+          minWidth: 150,
           color:
             goodDiffDirection != null && diff != null
               ? goodDiffDirection * diff >= 0

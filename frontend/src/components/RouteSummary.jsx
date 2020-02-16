@@ -46,16 +46,20 @@ function RouteSummary(props) {
 
   let stats = null;
   let dirInfo = null;
+  let intervalMetrics = null;
   if (directionId) {
     stats =
       routeStats.directions.find(
         dirStats => dirStats.directionId === directionId,
       ) || {};
+
+    intervalMetrics = routeIntervalMetrics ? routeIntervalMetrics.directions.find(dirStats => dirStats.directionId === directionId) : null;
     dirInfo = route
       ? route.directions.find(dir => dir.id === directionId)
       : null;
   } else {
     stats = routeStats;
+    intervalMetrics = routeIntervalMetrics;
   }
 
   function handleTabChange(event, newValue) {
@@ -134,8 +138,8 @@ function RouteSummary(props) {
                   label="Median Service Frequency"
                   actual={stats.medianHeadway}
                   scheduled={
-                    routeIntervalMetrics
-                      ? routeIntervalMetrics.scheduledMedianHeadway
+                    intervalMetrics
+                      ? intervalMetrics.scheduledMedianHeadway
                       : null
                   }
                   positiveDiffDesc="longer"
@@ -156,8 +160,8 @@ function RouteSummary(props) {
                   label="Median Wait Time"
                   actual={stats.medianWaitTime}
                   scheduled={
-                    routeIntervalMetrics
-                      ? routeIntervalMetrics.scheduledMedianWaitTime
+                    intervalMetrics
+                      ? intervalMetrics.scheduledMedianWaitTime
                       : null
                   }
                   units="min"
@@ -180,8 +184,8 @@ function RouteSummary(props) {
                   label="Average Speed"
                   actual={stats.averageSpeed}
                   scheduled={
-                    routeIntervalMetrics
-                      ? routeIntervalMetrics.scheduledAverageSpeed
+                    intervalMetrics
+                      ? intervalMetrics.scheduledAverageSpeed
                       : null
                   }
                   units="mph"
@@ -221,13 +225,13 @@ function RouteSummary(props) {
                     <SummaryRow
                       label="Completed Trips"
                       actual={
-                        routeIntervalMetrics
-                          ? routeIntervalMetrics.completedTrips
+                        intervalMetrics
+                          ? intervalMetrics.completedTrips
                           : null
                       }
                       scheduled={
-                        routeIntervalMetrics
-                          ? routeIntervalMetrics.scheduledCompletedTrips
+                        intervalMetrics
+                          ? intervalMetrics.scheduledCompletedTrips
                           : null
                       }
                       positiveDiffDesc="more"

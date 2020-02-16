@@ -90,6 +90,8 @@ class PrecomputedStats:
 def get_precomputed_stats(agency_id, stat_id: str, d: date, start_time_str = None, end_time_str = None, scheduled = False, version = DefaultVersion) -> PrecomputedStats:
     cache_path = get_cache_path(agency_id, stat_id, d, start_time_str, end_time_str, scheduled, version)
 
+    #print(cache_path, file=sys.stderr)
+
     try:
         with open(cache_path, "r") as f:
             text = f.read()
