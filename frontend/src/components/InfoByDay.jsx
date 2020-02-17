@@ -6,7 +6,6 @@ import {
   XAxis,
   YAxis,
   LineSeries,
-  LineMarkSeries,
   VerticalBarSeries,
   ChartLabel,
   Crosshair,
@@ -18,9 +17,7 @@ import {
   PLANNING_PERCENTILE,
   REACT_VIS_CROSSHAIR_NO_LINE,
 } from '../UIConstants';
-import { computeScores } from '../helpers/routeCalculations';
 import { getPercentileValue } from '../helpers/graphData';
-import { getDistanceInMiles } from '../helpers/mapGeometry';
 import '../../node_modules/react-vis/dist/style.css';
 
 /**
@@ -29,14 +26,11 @@ import '../../node_modules/react-vis/dist/style.css';
 function InfoByDay(props) {
   const AVERAGE_TIME = 'average_time';
   const PLANNING_TIME = 'planning_time';
-  const ON_TIME_RATE = 'on_time_rate';
-  const SPEED = 'speed';
-  const TRAVEL_VARIABILITY = 'travel_variability';
 
   const [selectedOption, setSelectedOption] = useState(AVERAGE_TIME); // radio button starts on average time
   const [crosshairValues, setCrosshairValues] = useState([]); // tooltip starts out empty
 
-  const { byDayData, routes, graphParams } = props;
+  const { byDayData, graphParams } = props;
 
   /**
    * Event handler for radio buttons
@@ -55,24 +49,6 @@ function InfoByDay(props) {
     setCrosshairValues([]);
   };
 
-  const computeDistance = (myGraphParams, myRoutes) => {
-    if (myGraphParams && myGraphParams.endStopId) {
-      const directionId = myGraphParams.directionId;
-      const routeId = myGraphParams.routeId;
-      const route = myRoutes.find(thisRoute => thisRoute.id === routeId);
-      const directionInfo = route.directions.find(
-        dir => dir.id === directionId,
-      );
-      return getDistanceInMiles(
-        route,
-        directionInfo,
-        myGraphParams.startStopId,
-        myGraphParams.endStopId,
-      );
-    }
-    return 0;
-  };
-
   /**
    * Returns a mapping function for creating a react-vis XYPlot data series out of interval data.
    * Example of interval data is shown at end of this file.
@@ -84,11 +60,6 @@ function InfoByDay(props) {
    * @param {intervalField} One of wait_times or travel_times.
    */
   const mapDays = (field, attribute) => {
-    let distance;
-    if (attribute === SPEED) {
-      distance = routes ? computeDistance(graphParams, routes) : null;
-    }
-
     return day => {
       let y = 0;
 
@@ -97,20 +68,6 @@ function InfoByDay(props) {
           y = day[field].median;
         } else if (attribute === PLANNING_TIME) {
           y = getPercentileValue(day[field], 90);
-        } else if (attribute === ON_TIME_RATE) {
-          const scheduleAdherence = day[field];
-          y =
-            scheduleAdherence && scheduleAdherence.scheduledCount > 0
-              ? (100 * scheduleAdherence.onTimeCount) /
-                scheduleAdherence.scheduledCount
-              : null;
-        } else if (attribute === SPEED) {
-          y = distance ? distance / (day[field].median / 60.0) : 0; // convert avg trip time to hours for mph
-        } else if (attribute === TRAVEL_VARIABILITY) {
-          y =
-            (getPercentileValue(day[field], 90) -
-              getPercentileValue(day[field], 10)) /
-            2;
         }
       }
 
@@ -186,11 +143,6 @@ function InfoByDay(props) {
    */
   const onNearestX = (_value, { index }) => {
     setCrosshairValues([waitData[index], tripData[index]]);
-  };
-
-  const onNearestXGeneric = (/* _value, { index } */) => {
-    // TODO: need to make only one chart's crosshair visible at a time,
-    // this currently makes it appear on all charts: setCrosshairValues([_value]);
   };
 
   return (

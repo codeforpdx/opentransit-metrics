@@ -40,44 +40,6 @@ export function metersToMiles(meters) {
   return meters / 1609.344;
 }
 
-/**
- * Score computation.
- *
- * TODO: refactor with Info.jsx's computation of grades once we add in probability
- * of long wait and travel variability to RouteSummary.
- */
-export function computeScores(medianWait, onTimeRate, speed, variability) {
-  const medianWaitScoreScale = d3
-    .scaleLinear()
-    .domain([2.5, 12.5])
-    .rangeRound([100, 0])
-    .clamp(true);
-
-  const onTimeRateScoreScale = d3
-    .scaleLinear()
-    .domain([1, 0])
-    .rangeRound([100, 0])
-    .clamp(true);
-
-  const speedScoreScale = d3
-    .scaleLinear()
-    .domain([5, 10])
-    .rangeRound([0, 100])
-    .clamp(true);
-
-  const medianWaitScore =
-    medianWait != null ? medianWaitScoreScale(medianWait) : null;
-  const onTimeRateScore =
-    onTimeRate != null ? onTimeRateScoreScale(onTimeRate) : null;
-  const speedScore = speed != null ? speedScoreScale(speed) : null;
-
-  return {
-    medianWaitScore,
-    onTimeRateScore,
-    speedScore,
-  };
-}
-
 export const HighestPossibleScore = 100;
 
 const backgroundColorScale = d3
@@ -140,25 +102,6 @@ export function haverDistance(degLatStop, degLonStop, degLatBus, degLonBus) {
 export function milesBetween(p1, p2) {
   const meters = haverDistance(p1.lat, p1.lon, p2.lat, p2.lon);
   return metersToMiles(meters);
-}
-
-export function addRanks(
-  statsArr,
-  property,
-  sortFactor,
-  rankProperty,
-  rankCountProperty,
-) {
-  const rankedStats = statsArr.filter(stats => stats[property] != null);
-  rankedStats.sort((a, b) => {
-    return (a[property] - b[property]) * sortFactor;
-  });
-
-  const rankCount = rankedStats.length;
-  rankedStats.forEach(function(stats, index) {
-    stats[rankProperty] = index + 1;
-    stats[rankCountProperty] = rankCount;
-  });
 }
 
 export function addAveragesForAllDirections(routeStats, property) {

@@ -2,7 +2,6 @@ import React, { useState, Fragment } from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { lighten, makeStyles, useTheme } from '@material-ui/core/styles';
-import Chip from '@material-ui/core/Chip';
 import Popover from '@material-ui/core/Popover';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -19,11 +18,7 @@ import FilterListIcon from '@material-ui/icons/FilterList';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import { connect } from 'react-redux';
 import Navlink from 'redux-first-router-link';
-import {
-  filterRoutes,
-  scoreBackgroundColor,
-  scoreContrastColor,
-} from '../helpers/routeCalculations';
+import { filterRoutes } from '../helpers/routeCalculations';
 
 function getComparisonFunction(order, orderBy) {
   // Sort null values to bottom regardless of ascending/descending
@@ -393,36 +388,32 @@ function RouteTable(props) {
             columns={columns}
           />
           <TableBody>
-            {stableSort(displayedRouteStats, order, orderBy).map(
-              (row, index) => {
-                const labelId = `enhanced-table-checkbox-${index}`;
-
-                return (
-                  <TableRow
-                    hover
-                    role="checkbox"
-                    tabIndex={-1}
-                    key={row.route.id}
-                  >
-                    {columns.map(column => {
-                      return (
-                        <TableCell
-                          align={column.numeric ? 'right' : 'left'}
-                          padding="none"
-                          style={{
-                            border: 'none',
-                            padding: 6,
-                            fontSize: 16,
-                          }}
-                        >
-                          {column.rowValue(row)}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              },
-            )}
+            {stableSort(displayedRouteStats, order, orderBy).map(row => {
+              return (
+                <TableRow
+                  hover
+                  role="checkbox"
+                  tabIndex={-1}
+                  key={row.route.id}
+                >
+                  {columns.map(column => {
+                    return (
+                      <TableCell
+                        align={column.numeric ? 'right' : 'left'}
+                        padding="none"
+                        style={{
+                          border: 'none',
+                          padding: 6,
+                          fontSize: 16,
+                        }}
+                      >
+                        {column.rowValue(row)}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

@@ -2,8 +2,6 @@ import React, { Fragment } from 'react';
 
 import { connect } from 'react-redux';
 
-import Grid from '@material-ui/core/Grid';
-
 import {
   AppBar,
   Box,
@@ -16,15 +14,10 @@ import {
   TableRow,
 } from '@material-ui/core';
 
-import InfoScoreCard from './InfoScoreCard';
-import InfoScoreLegend from './InfoScoreLegend';
 import TravelTimeChart from './TravelTimeChart';
 import MareyChart from './MareyChart';
 import SummaryRow from './SummaryRow';
-import {
-  HighestPossibleScore,
-  metersToMiles,
-} from '../helpers/routeCalculations';
+import { metersToMiles } from '../helpers/routeCalculations';
 
 /**
  * Renders an "nyc bus stats" style summary of a route and direction.
@@ -53,7 +46,11 @@ function RouteSummary(props) {
         dirStats => dirStats.directionId === directionId,
       ) || {};
 
-    intervalMetrics = routeIntervalMetrics ? routeIntervalMetrics.directions.find(dirStats => dirStats.directionId === directionId) : null;
+    intervalMetrics = routeIntervalMetrics
+      ? routeIntervalMetrics.directions.find(
+          dirStats => dirStats.directionId === directionId,
+        )
+      : null;
     dirInfo = route
       ? route.directions.find(dir => dir.id === directionId)
       : null;
@@ -225,9 +222,7 @@ function RouteSummary(props) {
                     <SummaryRow
                       label="Completed Trips"
                       actual={
-                        intervalMetrics
-                          ? intervalMetrics.completedTrips
-                          : null
+                        intervalMetrics ? intervalMetrics.completedTrips : null
                       }
                       scheduled={
                         intervalMetrics
@@ -269,104 +264,6 @@ function RouteSummary(props) {
       ) : null}
     </Fragment>
   );
-
-  /*
-              <Grid container spacing={4}>
-              <InfoScoreCard
-                title="Median Service Frequency"
-                largeValue="##"
-                smallValue="&nbsp;min"
-                bottomContent={
-                  <Fragment>
-                    <div>
-                      Scheduled:
-                      <br />
-                      ## min
-                    </div>
-                  </Fragment>
-                }
-                popoverContent={
-                  <Fragment>
-                    This is the median (50th percentile) time between vehicles
-                    during the service period. The median headway for the entire
-                    route is the median of the median headway for each stop
-                    along the route.
-                  </Fragment>
-                }
-              />
-              <InfoScoreCard
-                title="Median Wait"
-                largeValue={
-                  stats.medianWaitTime != null
-                    ? stats.medianWaitTime.toFixed(0)
-                    : '--'
-                }
-                smallValue="&nbsp;min"
-                bottomContent={
-                  <Fragment>
-                    Scheduled:
-                    <br />
-                    ## min
-                  </Fragment>
-                }
-                popoverContent={
-                  <Fragment>
-                    This is the median (50th percentile) time you would expect
-                    to wait for the next vehicle to depart, assuming you arrived
-                    at a random time during the service period without using
-                    timetables or predictions. The median wait time for the
-                    entire route is the median of the median wait times for each
-                    stop along the route.
-                  </Fragment>
-                }
-              />
-
-              <InfoScoreCard
-                title="On-Time %"
-                largeValue={
-                  stats.onTimeRate != null
-                    ? (stats.onTimeRate * 100).toFixed(0)
-                    : '--'
-                }
-                smallValue="%"
-                popoverContent={
-                  <Fragment>
-                    This is the percentage of scheduled departure times where a
-                    vehicle departed less than 5 minutes after the scheduled
-                    departure time or less than 1 minute before the scheduled
-                    departure time. The on-time percentage for the entire route
-                    is the median of the on-time percentage for each stop along
-                    the route.
-                  </Fragment>
-                }
-                bottomContent=""
-              />
-
-              <InfoScoreCard
-                title="Average Speed"
-                largeValue={
-                  stats.averageSpeed != null
-                    ? stats.averageSpeed.toFixed(0)
-                    : '--'
-                }
-                smallValue="&nbsp;mph"
-                bottomContent={
-                  <Fragment>
-                    Scheduled:
-                    <br />
-                    ## mph
-                  </Fragment>
-                }
-                popoverContent={
-                  <Fragment>
-                    This is the average speed from end to end for the median
-                    completed trip (50th percentile travel time)
-                    {directionId ? '' : ', averaged over all directions'}.
-                  </Fragment>
-                }
-              />
-            </Grid>
-            */
 }
 
 const mapStateToProps = state => ({

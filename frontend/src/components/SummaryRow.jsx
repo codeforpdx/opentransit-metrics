@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { useState } from 'react';
 
 import { TableCell, TableRow } from '@material-ui/core';
 
@@ -17,7 +17,10 @@ export default function SummaryRow(props) {
     infoContent,
   } = props;
 
-  const unitsSuffix = units ? (units != '%' ? ` ${units}` : units) : '';
+  let unitsSuffix = '';
+  if (units) {
+    unitsSuffix = units !== '%' ? ` ${units}` : units;
+  }
 
   const positiveDiffDesc = props.positiveDiffDesc || 'more';
   const negativeDiffDesc = props.negativeDiffDesc || 'less';
@@ -76,6 +79,21 @@ export default function SummaryRow(props) {
     fontSize: 16,
   };
 
+  let comparisonCellColor = null;
+  if (goodDiffDirection != null && diff != null) {
+    comparisonCellColor = goodDiffDirection * diff >= 0 ? 'green' : '#f07d02';
+  }
+
+  let comparisonText = null;
+  if (diff != null) {
+    comparisonText =
+      diff === 0
+        ? '--'
+        : `${Math.abs(diff).toFixed(precision)}${unitsSuffix} ${
+            diff > 0 ? positiveDiffDesc : negativeDiffDesc
+          } ${diffPercentStr}`;
+  }
+
   return (
     <TableRow hover role="checkbox" tabIndex={-1}>
       <TableCell component="th" scope="row" padding="none" style={cellStyle}>
@@ -88,10 +106,18 @@ export default function SummaryRow(props) {
           </IconButton>
         ) : null}
       </TableCell>
-      <TableCell align="right" padding="none" style={{...cellStyle, minWidth: 80}}>
+      <TableCell
+        align="right"
+        padding="none"
+        style={{ ...cellStyle, minWidth: 80 }}
+      >
         {renderValue(actual)}
       </TableCell>
-      <TableCell align="right" padding="none" style={{...cellStyle, minWidth: 80}}>
+      <TableCell
+        align="right"
+        padding="none"
+        style={{ ...cellStyle, minWidth: 80 }}
+      >
         {renderValue(scheduled)}
       </TableCell>
       <TableCell
@@ -100,24 +126,13 @@ export default function SummaryRow(props) {
         style={{
           ...cellStyle,
           minWidth: 150,
-          color:
-            goodDiffDirection != null && diff != null
-              ? goodDiffDirection * diff >= 0
-                ? 'green'
-                : 'orange'
-              : null,
+          color: comparisonCellColor,
         }}
       >
-        {scheduled == 'TODO' && actual
+        {scheduled === 'TODO' && actual
           ? `##${unitsSuffix} ${positiveDiffDesc}/${negativeDiffDesc} (#%)`
           : null}
-        {diff != null
-          ? diff == 0
-            ? '--'
-            : `${Math.abs(diff).toFixed(precision)}${unitsSuffix} ${
-                diff > 0 ? positiveDiffDesc : negativeDiffDesc
-              } ${diffPercentStr}`
-          : ''}
+        {comparisonText}
       </TableCell>
       {infoContent ? (
         <Popover

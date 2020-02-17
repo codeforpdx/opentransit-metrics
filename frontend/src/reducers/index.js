@@ -1,11 +1,6 @@
 import Moment from 'moment';
 import { WEEKDAYS, WEEKENDS } from '../UIConstants';
-import {
-  isIgnoredRoute,
-  addRanks,
-  addAveragesForAllDirections,
-  computeScores,
-} from '../helpers/routeCalculations';
+import { addAveragesForAllDirections } from '../helpers/routeCalculations';
 
 export { default as loading } from './loadingReducer';
 export { default as page } from './page';
@@ -137,18 +132,6 @@ export function spiderSelection(state = initialSpiderSelection, action) {
   }
 }
 
-function addScores(stats) {
-  Object.assign(
-    stats,
-    computeScores(
-      stats.medianWaitTime,
-      stats.onTimeRate,
-      stats.averageSpeed,
-      stats.travelTimeVariability,
-    ),
-  );
-}
-
 function makeStatsByRouteId(agencyMetricsData) {
   const routesStats = agencyMetricsData
     ? agencyMetricsData.interval.routes
@@ -165,36 +148,6 @@ function makeStatsByRouteId(agencyMetricsData) {
       addAveragesForAllDirections(routeStats, property);
     });
   });
-
-  /*
-  const rankedRouteStats = routesStats.filter(
-    stats =>
-      !isIgnoredRoute({
-        agencyId: agencyMetricsData.agencyId,
-        id: stats.routeId,
-      }),
-  );
-
-  addRanks(rankedRouteStats, 'medianWaitTime', 1, 'waitRank', 'waitRankCount');
-  addRanks(rankedRouteStats, 'averageSpeed', -1, 'speedRank', 'speedRankCount');
-  addRanks(rankedRouteStats, 'onTimeRate', -1, 'onTimeRank', 'onTimeRankCount');
-  addRanks(
-    rankedRouteStats,
-    'travelTimeVariability',
-    1,
-    'variabilityRank',
-    'variabilityRankCount',
-  );
-
-  routesStats.forEach(function(stats) {
-    addScores(stats);
-    stats.directions.forEach(function(dirStats) {
-      addScores(dirStats);
-    });
-  });
-
-  addRanks(rankedRouteStats, 'totalScore', -1, 'scoreRank', 'scoreRankCount');
-  */
 
   const statsByRouteId = {};
   routesStats.forEach(routeStats => {
