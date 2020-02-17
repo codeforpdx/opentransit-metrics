@@ -105,7 +105,7 @@ export default function InfoTripSummary(props) {
               actual={headways ? headways.median : null}
               scheduled={scheduledHeadways ? scheduledHeadways.median : null}
               units="min"
-              precision={1}
+              precision={0}
               positiveDiffDesc="longer"
               negativeDiffDesc="shorter"
               goodDiffDirection={-1}
@@ -121,7 +121,7 @@ export default function InfoTripSummary(props) {
               actual={waitTimes ? waitTimes.median : null}
               scheduled={scheduledWaitTimes ? scheduledWaitTimes.median : null}
               units="min"
-              precision={1}
+              precision={0}
               positiveDiffDesc="longer"
               negativeDiffDesc="shorter"
               goodDiffDirection={-1}
@@ -139,7 +139,7 @@ export default function InfoTripSummary(props) {
               actual={tripTimes ? tripTimes.median : null}
               scheduled={scheduledTripTimes ? scheduledTripTimes.median : null}
               units="min"
-              precision={1}
+              precision={0}
               positiveDiffDesc="longer"
               negativeDiffDesc="shorter"
               goodDiffDirection={-1}
@@ -155,7 +155,7 @@ export default function InfoTripSummary(props) {
               actual={averageSpeed}
               scheduled={scheduledAverageSpeed}
               units="mph"
-              precision={1}
+              precision={0}
               positiveDiffDesc="faster"
               negativeDiffDesc="slower"
               goodDiffDirection={1}

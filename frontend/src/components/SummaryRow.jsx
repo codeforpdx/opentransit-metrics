@@ -79,19 +79,24 @@ export default function SummaryRow(props) {
     fontSize: 16,
   };
 
-  let comparisonCellColor = null;
-  if (goodDiffDirection != null && diff != null) {
-    comparisonCellColor = goodDiffDirection * diff >= 0 ? 'green' : '#f07d02';
+  const actualText = renderValue(actual);
+  const scheduledText = renderValue(scheduled);
+
+  let comparisonCellColor = 'green';
+  if (
+    goodDiffDirection != null &&
+    diff != null &&
+    actualText !== scheduledText &&
+    goodDiffDirection * diff < 0
+  ) {
+    comparisonCellColor = '#f07d02';
   }
 
   let comparisonText = null;
-  if (diff != null) {
-    comparisonText =
-      diff === 0
-        ? '--'
-        : `${Math.abs(diff).toFixed(precision)}${unitsSuffix} ${
-            diff > 0 ? positiveDiffDesc : negativeDiffDesc
-          } ${diffPercentStr}`;
+  if (diff != null && actualText !== scheduledText) {
+    comparisonText = `${Math.abs(diff).toFixed(precision)}${unitsSuffix} ${
+      diff > 0 ? positiveDiffDesc : negativeDiffDesc
+    } ${diffPercentStr}`;
   }
 
   return (
@@ -111,14 +116,14 @@ export default function SummaryRow(props) {
         padding="none"
         style={{ ...cellStyle, minWidth: 80 }}
       >
-        {renderValue(actual)}
+        {actualText}
       </TableCell>
       <TableCell
         align="right"
         padding="none"
         style={{ ...cellStyle, minWidth: 80 }}
       >
-        {renderValue(scheduled)}
+        {scheduledText}
       </TableCell>
       <TableCell
         align="right"

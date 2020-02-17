@@ -142,7 +142,7 @@ function RouteSummary(props) {
                   positiveDiffDesc="longer"
                   negativeDiffDesc="shorter"
                   goodDiffDirection={-1}
-                  precision={1}
+                  precision={0}
                   units="min"
                   infoContent={
                     <Fragment>
@@ -162,7 +162,7 @@ function RouteSummary(props) {
                       : null
                   }
                   units="min"
-                  precision={1}
+                  precision={0}
                   positiveDiffDesc="longer"
                   negativeDiffDesc="shorter"
                   goodDiffDirection={-1}
@@ -186,7 +186,7 @@ function RouteSummary(props) {
                       : null
                   }
                   units="mph"
-                  precision={1}
+                  precision={0}
                   positiveDiffDesc="faster"
                   negativeDiffDesc="slower"
                   goodDiffDirection={1}
