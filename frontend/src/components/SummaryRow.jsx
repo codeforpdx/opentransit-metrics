@@ -41,13 +41,14 @@ export default function SummaryRow(props) {
     return value;
   };
 
-  const diffPercent =
+  /* const diffPercent =
     typeof actual === 'number' && typeof scheduled === 'number' && scheduled > 0
       ? (actual / scheduled - 1) * 100
       : null;
 
   const diffPercentStr =
     diffPercent != null ? `(${Math.abs(diffPercent).toFixed(0)}%)` : '';
+  */
 
   const diff =
     typeof actual === 'number' && typeof scheduled === 'number'
@@ -94,9 +95,14 @@ export default function SummaryRow(props) {
 
   let comparisonText = null;
   if (diff != null && actualText !== scheduledText) {
-    comparisonText = `${Math.abs(diff).toFixed(precision)}${unitsSuffix} ${
+    const absDiff = Math.abs(diff);
+    let diffStr = absDiff.toFixed(precision);
+    if (diffStr === '0') {
+      diffStr = '< 1';
+    }
+    comparisonText = `${diffStr}${unitsSuffix} ${
       diff > 0 ? positiveDiffDesc : negativeDiffDesc
-    } ${diffPercentStr}`;
+    }`; // ${diffPercentStr}`;
   }
 
   return (

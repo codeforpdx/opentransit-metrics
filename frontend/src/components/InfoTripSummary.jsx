@@ -174,7 +174,7 @@ export default function InfoTripSummary(props) {
               negativeDiffDesc="fewer"
               goodDiffDirection={1}
             />
-            <SummaryRow
+            {/* <SummaryRow
               label="Total Departures"
               actual={intervalMetrics ? intervalMetrics.departures : null}
               scheduled={
@@ -193,7 +193,7 @@ export default function InfoTripSummary(props) {
               positiveDiffDesc="more"
               negativeDiffDesc="fewer"
               goodDiffDirection={1}
-            />
+            /> */}
             <SummaryRow
               label="On-Time Departure %"
               actual={getOnTimePercent(departureScheduleAdherence)}
