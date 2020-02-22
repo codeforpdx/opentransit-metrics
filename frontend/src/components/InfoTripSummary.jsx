@@ -14,6 +14,7 @@ import {
 
 import { getDistanceInMiles, getTripStops } from '../helpers/mapGeometry';
 import SummaryRow from './SummaryRow';
+import SummaryHeaderRow from './SummaryHeaderRow';
 
 /**
  * Renders an "nyc bus stats" style summary of a route and direction.
@@ -87,17 +88,7 @@ export default function InfoTripSummary(props) {
       <div>
         <Table aria-labelledby="tableTitle">
           <TableHead>
-            <TableRow>
-              <TableCell align="right" padding="default"></TableCell>
-              <TableCell align="right" padding="default"></TableCell>
-              <TableCell align="right" padding="none" style={headerCellStyle}>
-                Observed
-              </TableCell>
-              <TableCell align="right" padding="none" style={headerCellStyle}>
-                Scheduled
-              </TableCell>
-              <TableCell align="right" padding="none"></TableCell>
-            </TableRow>
+            <SummaryHeaderRow />
           </TableHead>
           <TableBody>
             <SummaryRow

@@ -241,6 +241,7 @@ export function fetchRouteMetrics(params) {
             fromStopId
             toStopId
             medianTripTime
+            scheduledMedianTripTime
             trips
           }
         }

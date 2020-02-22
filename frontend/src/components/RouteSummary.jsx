@@ -17,6 +17,7 @@ import {
 import TravelTimeChart from './TravelTimeChart';
 import MareyChart from './MareyChart';
 import SummaryRow from './SummaryRow';
+import SummaryHeaderRow from './SummaryHeaderRow';
 import { metersToMiles } from '../helpers/routeCalculations';
 
 /**
@@ -74,8 +75,6 @@ function RouteSummary(props) {
   const TRAVEL_TIME = 1;
   const MAREY_CHART = 2;
 
-  const headerCellStyle = { padding: 6, fontSize: 16 };
-
   return (
     <Fragment>
       <br />
@@ -108,27 +107,9 @@ function RouteSummary(props) {
       {tabValue === SUMMARY ? (
         <Box p={2}>
           <div>
-            <Table aria-labelledby="tableTitle">
+            <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell align="right" padding="none"></TableCell>
-                  <TableCell align="right" padding="none"></TableCell>
-                  <TableCell
-                    align="right"
-                    padding="none"
-                    style={headerCellStyle}
-                  >
-                    Observed
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    padding="none"
-                    style={headerCellStyle}
-                  >
-                    Scheduled
-                  </TableCell>
-                  <TableCell align="right" padding="none"></TableCell>
-                </TableRow>
+                <SummaryHeaderRow />
               </TableHead>
               <TableBody>
                 <SummaryRow

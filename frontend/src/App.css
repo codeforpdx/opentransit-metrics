@@ -80,3 +80,16 @@
   text-shadow: -1px 1px 0 #fff, 1px 1px 0 #fff, 1px -1px 0 #fff,
     -1px -1px 0 #fff;
 }
+
+.rv-xy-plot__axis__title text {
+    font-size:16px !important;
+}
+
+text.rv-xy-plot__axis__tick__text {
+    font-size:14px;
+}
+
+.rv-discrete-color-legend-item__title
+{
+    font-size:14px;
+}
