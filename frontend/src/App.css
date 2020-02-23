@@ -64,6 +64,15 @@
     opacity:1.0;
 }
 
+@media (min-width: 600px)
+{
+    .map-fixed-half {
+        position:fixed !important;
+        top:52px;
+        width:50%;
+    }
+}
+
 .on-hover > svg {
   transform: scale(1.6);
 }

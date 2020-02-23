@@ -206,7 +206,9 @@ const EnhancedTableToolbar = props => {
       >
         <div className={classes.popover}>
           {columns.map(column => {
-            return column.helpContent ? <p>{column.helpContent}</p> : null;
+            return column.helpContent ? (
+              <p key={column.id}>{column.helpContent}</p>
+            ) : null;
           })}
         </div>
       </Popover>
@@ -257,12 +259,12 @@ function RouteTable(props) {
   }
 
   let routes = props.routes ? filterRoutes(props.routes) : [];
-  const spiderStops = props.spiderSelection.stops;
+  const spiderLines = props.spiderSelection.nearbyLines;
 
   // filter the route list down to the spider routes if needed
 
-  if (spiderStops && spiderStops.length > 0) {
-    const spiderRouteIds = spiderStops.map(spider => spider.routeId);
+  if (spiderLines && spiderLines.length > 0) {
+    const spiderRouteIds = spiderLines.map(spider => spider.route.id);
     routes = routes.filter(myRoute => spiderRouteIds.includes(myRoute.id));
   }
 
@@ -399,6 +401,7 @@ function RouteTable(props) {
                   {columns.map(column => {
                     return (
                       <TableCell
+                        key={column.id}
                         align={column.numeric ? 'right' : 'left'}
                         padding="none"
                         style={{

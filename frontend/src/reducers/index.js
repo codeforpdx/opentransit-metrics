@@ -115,7 +115,7 @@ export function arrivals(state = initialArrivals, action) {
 }
 
 const initialSpiderSelection = {
-  stops: [],
+  nearbyLines: [],
   latLng: null,
 };
 
@@ -124,7 +124,7 @@ export function spiderSelection(state = initialSpiderSelection, action) {
     case 'RECEIVED_SPIDER_MAP_CLICK':
       return {
         ...state,
-        stops: action.stops,
+        nearbyLines: action.nearbyLines,
         latLng: action.latLng,
       };
     default:

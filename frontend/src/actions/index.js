@@ -61,7 +61,7 @@ export function generateArrivalsURL(agencyId, dateStr, routeId) {
   return `https://${S3Bucket}.s3.amazonaws.com/arrivals/${ArrivalsVersion}/${agencyId}/${dateStr.replace(
     /-/g,
     '/',
-  )}/arrivals_${ArrivalsVersion}_${agencyId}_${dateStr}_${routeId}.json.gz?ai`;
+  )}/arrivals_${ArrivalsVersion}_${agencyId}_${dateStr}_${routeId}.json.gz?aj`;
 }
 
 export function fetchTripMetrics(params) {
@@ -243,6 +243,7 @@ export function fetchRouteMetrics(params) {
             medianTripTime
             scheduledMedianTripTime
             trips
+            scheduledTrips
           }
         }
       }
@@ -410,9 +411,9 @@ export function resetArrivals() {
   };
 }
 
-export function handleSpiderMapClick(stops, latLng) {
+export function handleSpiderMapClick(nearbyLines, latLng) {
   return function(dispatch) {
-    dispatch({ type: 'RECEIVED_SPIDER_MAP_CLICK', stops, latLng });
+    dispatch({ type: 'RECEIVED_SPIDER_MAP_CLICK', nearbyLines, latLng });
   };
 }
 

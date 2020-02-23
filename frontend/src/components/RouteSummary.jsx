@@ -10,8 +10,6 @@ import {
   Table,
   TableBody,
   TableHead,
-  TableCell,
-  TableRow,
 } from '@material-ui/core';
 
 import TravelTimeChart from './TravelTimeChart';
@@ -77,7 +75,6 @@ function RouteSummary(props) {
 
   return (
     <Fragment>
-      <br />
       <AppBar position="static" color="default">
         <Tabs
           value={tabValue}
@@ -93,7 +90,7 @@ function RouteSummary(props) {
           />
           <Tab
             style={{ minWidth: 72 }}
-            label="Travel Time"
+            label="Trip Times"
             {...a11yProps(TRAVEL_TIME)}
           />
           <Tab

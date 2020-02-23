@@ -19,7 +19,6 @@ import '../../node_modules/react-vis/dist/style.css';
 
 import { connect } from 'react-redux';
 
-import Typography from '@material-ui/core/Typography';
 import { Radio, FormControl, FormControlLabel } from '@material-ui/core';
 
 import Moment from 'moment';
@@ -364,7 +363,6 @@ function MareyChart(props) {
 
   return processedArrivals ? (
     <Fragment>
-      <Typography variant="h5">Trip chart</Typography>
       Vehicle runs: {series.length} <br />
       <FormControl>
         <div className="controls">

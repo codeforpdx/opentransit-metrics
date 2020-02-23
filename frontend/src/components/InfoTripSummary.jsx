@@ -4,13 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  TableHead,
-} from '@material-ui/core';
+import { Table, TableBody, TableHead } from '@material-ui/core';
 
 import { getDistanceInMiles, getTripStops } from '../helpers/mapGeometry';
 import SummaryRow from './SummaryRow';
@@ -80,8 +74,6 @@ export default function InfoTripSummary(props) {
       ? (100 * scheduleAdherence.onTimeCount) / scheduleAdherence.scheduledCount
       : null;
   };
-
-  const headerCellStyle = { padding: 6, fontSize: 16 };
 
   return (
     <Fragment>

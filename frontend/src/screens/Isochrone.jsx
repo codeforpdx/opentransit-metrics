@@ -20,6 +20,11 @@ import AppBarLogo from '../components/AppBarLogo';
 import SidebarButton from '../components/SidebarButton';
 import DateTimePanel from '../components/DateTimePanel';
 
+import {
+  Polyline
+} from 'react-leaflet';
+
+
 import { fetchRoutes } from '../actions';
 import {
   S3Bucket,
@@ -92,6 +97,7 @@ class Isochrone extends React.Component {
       tripInfo: null,
       enabledRoutes: {},
       noData: false,
+      height: this.computeHeight(),
     };
 
     let workerUrl = `${
@@ -115,6 +121,7 @@ class Isochrone extends React.Component {
     this.layers = [];
     this.isochroneLayers = [];
     this.tripLayers = [];
+    this.routeLayers = [];
     this.mapRef = React.createRef();
 
     defaultDisabledRoutes.forEach(routeId => {
@@ -152,9 +159,63 @@ class Isochrone extends React.Component {
     if (!this.props.routes) {
       this.props.fetchRoutes();
     }
+    this.boundUpdate = this.updateDimensions.bind(this);
+    window.addEventListener('resize', this.boundUpdate);
+
+    this.updateRouteLayers();
+  }
+
+  updateRouteLayers() {
+    if (!this.mapRef.current) {
+        console.log("no map element");
+        return;
+    }
+    var map = this.mapRef.current.leafletElement;
+    const routes = this.props.routes;
+
+    this.routeLayers.forEach(layer => {
+      layer.remove();
+    });
+    this.routeLayers = [];
+
+    if (routes && map) {
+        routes.forEach(route => {
+            if (this.state.enabledRoutes[route.id] !== false) {
+                return route.directions.map(direction => {
+                    const routeLayer = L.polyline(getTripPoints(route, direction), {
+                        color:"#0177BF",
+                        opacity:0.2,
+                        weight:1.5
+                    }).addTo(map);
+                    this.routeLayers.push(routeLayer);
+                });
+            }
+        });
+     }
+   }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.updateDimensions.bind(this));
+  }
+
+  updateDimensions() {
+    const height = this.computeHeight();
+    this.setState({ height });
+  }
+
+  computeHeight() {
+    return (
+      window.innerHeight - 52
+    );
   }
 
   componentDidUpdate(prevProps) {
+    if (
+      this.props.routes !== prevProps.routes
+    ) {
+      this.updateRouteLayers();
+    }
+
     if (
       this.props.date !== prevProps.date ||
       this.props.startTime !== prevProps.startTime ||
@@ -510,7 +571,7 @@ class Isochrone extends React.Component {
 
     this.setState(
       { enabledRoutes: { ...this.state.enabledRoutes, [routeId]: checked } },
-      this.recomputeIsochrones,
+      this.enabledRoutesChanged,
     );
   }
 
@@ -579,7 +640,12 @@ class Isochrone extends React.Component {
       enabledRoutes[route.id] = enabled;
     });
 
-    this.setState({ enabledRoutes }, this.recomputeIsochrones);
+    this.setState({ enabledRoutes }, this.enabledRoutesChanged);
+  }
+
+  enabledRoutesChanged() {
+      this.updateRouteLayers();
+      this.recomputeIsochrones();
   }
 
   makeRouteToggle(route) {
@@ -597,6 +663,7 @@ class Isochrone extends React.Component {
               onChange={this.handleToggleRoute}
               value={route.id}
               color="primary"
+              size="small"
             />
           }
           label={route.id}
@@ -638,16 +705,10 @@ class Isochrone extends React.Component {
     }
     tripMins.push(90);
 
+    const mapStyle = { width: '100%', height: this.state.height };
+
     return (
-      <div className="flex-screen">
-        <AppBar position="relative">
-          <Toolbar>
-            <SidebarButton />
-            <AppBarLogo />
-            <div className="page-title">Isochrone</div>
-            <DateTimePanel />
-          </Toolbar>
-        </AppBar>
+      <>
         <Map
           center={this.initialCenter}
           zoom={this.initialZoom}
@@ -656,17 +717,19 @@ class Isochrone extends React.Component {
           maxZoom={18}
           onClick={this.handleMapClick}
           ref={this.mapRef}
+          style={mapStyle}
         >
           <TileLayer
             attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
             url="https://stamen-tiles.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png"
+            opacity={0.6}
           />
           {/* see http://maps.stamen.com for details */}
           <Control position="topleft" className="">
             <div ref={this.refContainer}>
               <Grid container className="isochrone-controls" direction="column">
                 <Grid item>
-                  <Typography variant="subtitle1">Max Trip Time</Typography>
+                  <Typography variant="subtitle2">Max Trip Time</Typography>
                 </Grid>
                 <Grid item>
                   <Select
@@ -683,12 +746,12 @@ class Isochrone extends React.Component {
               </Grid>
               <Grid container className="isochrone-controls" direction="column">
                 <Grid item>
-                  <Typography variant="subtitle1">Routes</Typography>
+                  <Typography variant="subtitle2">Routes</Typography>
                 </Grid>
                 <Grid container item direction="row" alignItems="flex-start">
                   <Grid item>
-                    <Button onClick={this.selectAllRoutesClicked}>all</Button>
-                    <Button onClick={this.selectNoRoutesClicked}>none</Button>
+                    <Button size='small' onClick={this.selectAllRoutesClicked}>all</Button>
+                    <Button size='small' onClick={this.selectNoRoutesClicked}>none</Button>
                   </Grid>
                 </Grid>
                 <Grid item>
@@ -726,6 +789,7 @@ class Isochrone extends React.Component {
             <Button
               variant="contained"
               color="secondary"
+              size="small"
               onClick={this.resetMapClicked}
             >
               Clear map
@@ -734,7 +798,7 @@ class Isochrone extends React.Component {
             <br />
           </Control>
         </Map>
-      </div>
+      </>
     );
   }
 }

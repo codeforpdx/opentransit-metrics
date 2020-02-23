@@ -11,7 +11,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import MapRoundedIcon from '@material-ui/icons/MapRounded';
 import TimelineRoundedIcon from '@material-ui/icons/TimelineRounded';
-import CodeRoundedIcon from '@material-ui/icons/CodeRounded';
+// import CodeRoundedIcon from '@material-ui/icons/CodeRounded';
 import InfoRoundedIcon from '@material-ui/icons/InfoRounded';
 import Divider from '@material-ui/core/Divider';
 import { useTheme } from '@material-ui/core/styles';
@@ -67,6 +67,7 @@ function SidebarButton(props) {
                 type: 'DASHBOARD',
                 query: props.currentLocation.query,
               }}
+              onClick={toggleDrawer}
               activeStyle={activeStyle}
               exact
               style={inactiveStyle}
@@ -84,6 +85,7 @@ function SidebarButton(props) {
                 type: 'ISOCHRONE',
                 query: props.currentLocation.query,
               }}
+              onClick={toggleDrawer}
               activeStyle={activeStyle}
               exact
               style={inactiveStyle}
@@ -94,23 +96,6 @@ function SidebarButton(props) {
                 <TimelineRoundedIcon color="primary" />
               </ListItemIcon>
               <ListItemText primary="Isochrone" />
-            </ListItem>
-            <ListItem
-              component={NavLink}
-              to={{
-                type: 'DATADIAGNOSTIC',
-                query: props.currentLocation.query,
-              }}
-              activeStyle={activeStyle}
-              exact
-              style={inactiveStyle}
-              button
-              selected={currentPage === components.DATADIAGNOSTIC}
-            >
-              <ListItemIcon>
-                <CodeRoundedIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Developer Tools" />
             </ListItem>
             <Divider light />
             <ListItem

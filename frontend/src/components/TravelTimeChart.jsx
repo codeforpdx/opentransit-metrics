@@ -23,7 +23,13 @@ import { metersToMiles } from '../helpers/routeCalculations';
  * Returns an array of {x: stop index, y: time} objects for
  * plotting on a chart.
  */
-export function getTripDataSeries(dirMetrics, directionInfo, route, cumulativeSegmentTimeProperty) {
+export function getTripDataSeries(
+  dirMetrics,
+  directionInfo,
+  route,
+  cumulativeSegmentTimeProperty,
+  cumulativeSegmentTripsProperty,
+) {
   let firstStopId = null;
   const segmentsMap = {};
   dirMetrics.cumulativeSegments.forEach(function(segment) {
@@ -46,14 +52,18 @@ export function getTripDataSeries(dirMetrics, directionInfo, route, cumulativeSe
         title,
         stopIndex: index,
       });
-    } else if (segment && segment[cumulativeSegmentTimeProperty] != null && stopGeometry) {
+    } else if (
+      segment &&
+      segment[cumulativeSegmentTimeProperty] != null &&
+      stopGeometry
+    ) {
       // Drop trip data points with no data.
       dataSeries.push({
         x: metersToMiles(stopGeometry.distance - firstStopDistance),
         y: segment[cumulativeSegmentTimeProperty],
         title,
         stopIndex: index,
-        numTrips: segment.trips,
+        numTrips: segment[cumulativeSegmentTripsProperty],
       });
     }
   });
@@ -104,11 +114,9 @@ function TravelTimeChart(props) {
     setCrosshairValues([value, scheduledData[info.index]]);
   };
 
-
   let tripTimeForDirection = null;
   let distanceForDirection = null;
   let numStops = null;
-  let numTrips = null;
 
   const { routeId, directionId } = graphParams;
 
@@ -126,17 +134,26 @@ function TravelTimeChart(props) {
       : null;
 
     if (dirMetrics && directionInfo) {
-      observedData = getTripDataSeries(dirMetrics, directionInfo, route, 'medianTripTime');
-      scheduledData = getTripDataSeries(dirMetrics, directionInfo, route, 'scheduledMedianTripTime');
+      observedData = getTripDataSeries(
+        dirMetrics,
+        directionInfo,
+        route,
+        'medianTripTime',
+        'trips',
+      );
+      scheduledData = getTripDataSeries(
+        dirMetrics,
+        directionInfo,
+        route,
+        'scheduledMedianTripTime',
+        'scheduledTrips',
+      );
     }
 
     numStops = observedData.length;
     tripTimeForDirection = numStops > 0 ? observedData[numStops - 1].y : null;
     distanceForDirection = numStops > 0 ? observedData[numStops - 1].x : null;
-    numTrips = numStops > 0 ? observedData[numStops - 1].numTrips : null;
   }
-
-  const tripData = observedData;
 
   const observedColor = '#aa82c5';
   const scheduledColor = '#b4b6b9';
@@ -148,7 +165,7 @@ function TravelTimeChart(props) {
 
   return directionId ? (
     <Fragment>
-      <Typography variant="h5">Travel time along route</Typography>
+      <Typography variant="h5">Median travel time along route</Typography>
       Median travel time:{' '}
       {tripTimeForDirection > 0 ? tripTimeForDirection.toFixed(0) : '?'} min
       &nbsp;&nbsp; Average speed:{' '}
@@ -157,20 +174,25 @@ function TravelTimeChart(props) {
         : '?'}{' '}
       mph
       <br />
-
       {/* set the y domain to start at zero and end at highest value (which is not always
          the end to end travel time due to spikes in the data) */}
       <XYPlot
         height={350}
         width={500}
-        margin={{left:50, right:10, top:10, bottom:45}}
+        margin={{ left: 50, right: 10, top: 10, bottom: 45 }}
         xDomain={[
           0,
-          tripData.reduce((max, coord) => (coord.x > max ? coord.x : max), 0),
+          observedData.reduce(
+            (max, coord) => (coord.x > max ? coord.x : max),
+            0,
+          ),
         ]}
         yDomain={[
           0,
-          tripData.reduce((max, coord) => (coord.y > max ? coord.y : max), 0),
+          observedData.reduce(
+            (max, coord) => (coord.y > max ? coord.y : max),
+            numStops > 0 ? scheduledData[numStops - 1].y : 0,
+          ),
         ]}
         onMouseLeave={onMouseLeave}
       >
@@ -184,7 +206,7 @@ function TravelTimeChart(props) {
           stroke={scheduledColor}
           strokeWidth="2"
           style={{
-            strokeDasharray: '2 2'
+            strokeDasharray: '2 2',
           }}
         />
         <LineMarkSeries
@@ -200,7 +222,7 @@ function TravelTimeChart(props) {
         <ChartLabel
           text="Minutes"
           includeMargin
-          className='alt-y-label'
+          className="alt-y-label"
           xPercent={0.03}
           yPercent={0.2}
           style={{
@@ -225,10 +247,28 @@ function TravelTimeChart(props) {
             values={crosshairValues}
             style={{ line: { background: 'none' } }}
           >
-            <div className="rv-crosshair__inner__content" style={{whiteSpace:'nowrap'}}>
-              <div>{crosshairValues[0].title} (Stop #{crosshairValues[0].stopIndex + 1})</div>
-              <div>{Math.round(crosshairValues[0].y)} min (observed)</div>
-              {crosshairValues[1] ? <div>{ Math.round(crosshairValues[1].y)} min (scheduled)</div> : null}
+            <div
+              className="rv-crosshair__inner__content"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              <div>
+                {crosshairValues[0].title} (Stop #
+                {crosshairValues[0].stopIndex + 1})
+              </div>
+              {crosshairValues[0].numTrips > 0 ? (
+                <>
+                  <div>
+                    {Math.round(crosshairValues[0].y)} min (observed);{' '}
+                    {crosshairValues[0].numTrips} trips
+                  </div>
+                  {crosshairValues[1] ? (
+                    <div>
+                      {Math.round(crosshairValues[1].y)} min (scheduled);{' '}
+                      {crosshairValues[1].numTrips} trips
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
             </div>
           </Crosshair>
         )}

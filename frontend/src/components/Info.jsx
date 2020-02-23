@@ -119,7 +119,6 @@ function Info(props) {
 
   return (
     <div>
-      <br />
       <AppBar position="static" color="default">
         <Tabs
           value={tabValue}
