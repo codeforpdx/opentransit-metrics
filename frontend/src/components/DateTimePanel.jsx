@@ -1,9 +1,7 @@
 import React, { useState, Fragment } from 'react';
 import Moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
-import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
 import Grid from '@material-ui/core/Grid';
 import Popover from '@material-ui/core/Popover';
@@ -35,7 +33,6 @@ import {
 } from '../UIConstants';
 import { components } from '../reducers/page';
 import { initialGraphParams } from '../reducers';
-import { isLoadingRequest } from '../reducers/loadingReducer';
 import { handleGraphParams } from '../actions';
 import { queryFromParams } from '../routesMap';
 
@@ -43,14 +40,19 @@ const useStyles = makeStyles(theme => ({
   button: {
     textTransform: 'none',
     display: 'flex',
+    borderColor: '#0067AF',
+    padding: '2px 6px 2px 10px',
     justifyContent: 'flex-start',
+    marginTop: '2px',
   },
   heading: {
-    fontSize: theme.typography.pxToRem(15),
+    fontSize: theme.typography.pxToRem(16),
+    color: 'white',
   },
   secondaryHeading: {
-    fontSize: theme.typography.pxToRem(12),
-    color: theme.palette.text.secondary,
+    fontSize: theme.typography.pxToRem(15),
+    color: 'white',
+    // color: theme.palette.text.secondary,
     textAlign: 'left',
   },
   column: {
@@ -61,8 +63,8 @@ const useStyles = makeStyles(theme => ({
     display: 'flex',
   },
   root: {
-    display: 'flex',
-    flexWrap: 'wrap',
+    display: 'inline-block',
+    paddingLeft: '7px',
   },
   formControl: {
     leftMargin: theme.spacing(1),
@@ -147,14 +149,11 @@ function DateTimePanel(props) {
   }
 
   /**
-   * convert yyyy/mm/dd to mm/dd/yyyy
+   * convert yyyy/mm/dd to m/d/yyyy
    */
   function convertDate(ymdString) {
     const date = new Date(ymdString);
-    return `${(date.getUTCMonth() + 1).toString().padStart(2, '0')}/${date
-      .getUTCDate()
-      .toString()
-      .padStart(2, '0')}/${date.getUTCFullYear()}`;
+    return date.toLocaleDateString('en', { timeZone: 'UTC' });
   }
 
   // convert the state's current time range to a string or the sentinel value
@@ -337,20 +336,10 @@ function DateTimePanel(props) {
 
   return (
     <div className={classes.root}>
-      {props.isLoading ? (
-        <Box p={1}>
-          <CircularProgress
-            variant="indeterminate"
-            disableShrink
-            style={{ color: 'white' }}
-            size={24}
-          />
-        </Box>
-      ) : null}
-
       {rangeInfo}
       <Button
-        variant="contained"
+        variant="outlined"
+        color="inherit"
         className={classes.button}
         onClick={handleClick}
       >
@@ -577,7 +566,6 @@ function DateTimePanel(props) {
 
 const mapStateToProps = state => ({
   graphParams: state.graphParams,
-  isLoading: isLoadingRequest(state),
   currentPage: state.page,
 });
 

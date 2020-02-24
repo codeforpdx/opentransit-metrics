@@ -43,8 +43,15 @@
 
 .page-title
 {
-    flex-grow:1;
     font-size:18px;
+    padding-left:14px;
+    display:none;
+    padding-right:7px;
+}
+
+.flex-spacing
+{
+    flex-grow:1;
 }
 
 .flex-screen
@@ -64,12 +71,40 @@
     opacity:1.0;
 }
 
+.app-logo {
+    display:none;
+}
+
+.app-tab-text {
+    display:none;
+}
+
 @media (min-width: 600px)
 {
     .map-fixed-half {
         position:fixed !important;
-        top:52px;
+        top:48px;
         width:50%;
+    }
+}
+
+@media (min-width: 700px)
+{
+    .app-logo {
+        max-height: 38px;
+        padding-top: 5px;
+        padding-left: 10px;
+        display:inline;
+    }
+    .page-title {
+       display:inline;
+    }
+}
+
+@media (min-width: 900px)
+{
+    .app-tab-text {
+        display:inline;
     }
 }
 

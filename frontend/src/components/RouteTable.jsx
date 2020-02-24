@@ -1,5 +1,4 @@
 import React, { useState, Fragment } from 'react';
-import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { lighten, makeStyles, useTheme } from '@material-ui/core/styles';
 import Popover from '@material-ui/core/Popover';
@@ -9,12 +8,8 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
 
-import FilterListIcon from '@material-ui/icons/FilterList';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import { connect } from 'react-redux';
 import Navlink from 'redux-first-router-link';
@@ -141,6 +136,8 @@ const useToolbarStyles = makeStyles(theme => ({
   },
   title: {
     flex: '0 0 auto',
+    paddingLeft: '3px',
+    fontSize: '15px',
   },
   popover: {
     padding: theme.spacing(2),
@@ -150,7 +147,7 @@ const useToolbarStyles = makeStyles(theme => ({
 
 const EnhancedTableToolbar = props => {
   const classes = useToolbarStyles();
-  const { numSelected, columns } = props;
+  const { columns } = props;
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -163,32 +160,34 @@ const EnhancedTableToolbar = props => {
   }
 
   return (
-    <Toolbar
-      className={clsx(classes.root, {
-        [classes.highlight]: numSelected > 0,
-      })}
-    >
+    <>
       <div className={classes.title}>
-        {numSelected > 0 ? (
-          <Typography color="inherit" variant="subtitle1">
-            {numSelected} selected
-          </Typography>
-        ) : (
-          <Typography variant="h6" id="tableTitle">
-            Routes
-            <IconButton size="small" onClick={handleClick}>
-              <InfoIcon fontSize="small" />
-            </IconButton>
-          </Typography>
-        )}
+        {/* {dateLabel}{timeLabel ? (" - " + timeLabel) : null}{' '} */}
+        <span
+          style={{
+            fontWeight: 'normal',
+            display: 'inline-block',
+            paddingTop: '2px',
+          }}
+        >
+          Observed Metrics
+        </span>
+        <IconButton
+          size="small"
+          style={{ verticalAlign: 'top', marginLeft: '5px' }}
+          onClick={handleClick}
+        >
+          <InfoIcon fontSize="small" />
+        </IconButton>
       </div>
       <div className={classes.spacer} />
       <div className={classes.actions}>
+        {/*
         <Tooltip title="Filter list">
           <IconButton aria-label="Filter list">
             <FilterListIcon />
           </IconButton>
-        </Tooltip>
+        </Tooltip> */}
       </div>
 
       <Popover
@@ -205,6 +204,11 @@ const EnhancedTableToolbar = props => {
         }}
       >
         <div className={classes.popover}>
+          <div>
+            Observed metrics are computed from the GPS locations periodically
+            reported by transit vehicles. Metrics may be inaccurate if the raw
+            GPS data is missing or inaccurate.
+          </div>
           {columns.map(column => {
             return column.helpContent ? (
               <p key={column.id}>{column.helpContent}</p>
@@ -212,12 +216,8 @@ const EnhancedTableToolbar = props => {
           })}
         </div>
       </Popover>
-    </Toolbar>
+    </>
   );
-};
-
-EnhancedTableToolbar.propTypes = {
-  numSelected: PropTypes.number.isRequired,
 };
 
 const useStyles = makeStyles(theme => ({
@@ -247,7 +247,6 @@ function RouteTable(props) {
   const classes = useStyles();
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('title');
-  const dense = true;
   const theme = useTheme();
 
   const { statsByRouteId } = props;
@@ -279,7 +278,7 @@ function RouteTable(props) {
     {
       id: 'title',
       numeric: false,
-      label: 'Name',
+      label: 'Route',
       rowValue: row => {
         return (
           <Navlink
@@ -332,8 +331,9 @@ function RouteTable(props) {
       },
       helpContent: (
         <Fragment>
-          <b>Median Wait</b> is the 50th percentile (typical) wait time for a
-          rider arriving randomly at a stop while the route is running.
+          <b>Median Wait Time</b> is the 50th percentile (typical) wait time for
+          a rider arriving randomly at a stop while the route is running,
+          without using schedules or predictions.
         </Fragment>
       ),
     },
@@ -359,7 +359,7 @@ function RouteTable(props) {
     {
       id: 'onTimeRate',
       numeric: true,
-      label: 'On-Time %',
+      label: 'On\u2011Time %',
       rowValue: row => {
         return makeChip(
           row.onTimeRate == null
@@ -379,9 +379,9 @@ function RouteTable(props) {
 
   return (
     <div>
-      <EnhancedTableToolbar columns={columns} numSelected={0} />
+      <EnhancedTableToolbar columns={columns} />
       <div className={classes.tableWrapper}>
-        <Table aria-labelledby="tableTitle" size={dense ? 'small' : 'medium'}>
+        <Table aria-labelledby="tableTitle" size="small">
           <EnhancedTableHead
             order={order}
             orderBy={orderBy}

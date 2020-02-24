@@ -401,7 +401,7 @@ class MapSpider extends Component {
 
   computeHeight() {
     return window.innerWidth >= 600
-      ? window.innerHeight - 52 /* blue app bar */
+      ? window.innerHeight - 48 /* blue app bar */
       : Math.min(window.innerHeight, 500);
   }
 
@@ -547,7 +547,7 @@ class MapSpider extends Component {
             <div className="map-instructions">
               {spiderSelection.latLng && startMarkers && startMarkers.length
                 ? 'Click anywhere along a route to see statistics for trips between the two stops.'
-                : 'Click anywhere in the city to see the routes near that point.'}
+                : 'Click anywhere on the map to see the routes near that point.'}
             </div>
           </Control>
           <Control position="bottomleft">

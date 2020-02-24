@@ -265,7 +265,7 @@ class Isochrone extends React.Component {
     const reachableCircles = data.circles;
     const geoJson = data.geoJson;
 
-    if (this.state.computeId !== data.computeId) {
+    if (this.state.computeId !== data.computeId || !this.mapRef.current) {
       return;
     }
 

@@ -49,9 +49,6 @@ function RouteScreen(props) {
       </Paper>
       <Grid container spacing={0}>
         <Grid item xs={12} sm={6}>
-          <MapStops routes={routes} />
-        </Grid>
-        <Grid item xs={12} sm={6}>
           {/* control panel and map are full width for 640px windows or smaller, else half width */}
           {tripMetrics ||
           tripMetricsError ||
@@ -67,6 +64,9 @@ function RouteScreen(props) {
             /* if no graph data, show the info summary component */
             <RouteSummary />
           )}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <MapStops routes={routes} />
         </Grid>
       </Grid>
     </>
