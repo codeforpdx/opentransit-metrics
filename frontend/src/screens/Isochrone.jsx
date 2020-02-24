@@ -785,7 +785,7 @@ class Isochrone extends React.Component {
               <div className="isochrone-legend-times">{times}</div>
             </div>
           </Control>
-          <Control position="bottomleft">
+          {this.state.latLng ? <Control position="bottomleft">
             <Button
               variant="contained"
               color="secondary"
@@ -796,7 +796,7 @@ class Isochrone extends React.Component {
             </Button>
             <br />
             <br />
-          </Control>
+          </Control> : null}
         </Map>
       </>
     );

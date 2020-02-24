@@ -444,13 +444,6 @@ function DateTimePanel(props) {
 
           <ListItem>
             <FormControl component="fieldset" className={classes.formControl}>
-              <FormLabel
-                component="legend"
-                className={classes.secondaryHeading}
-              >
-                Days of the Week
-              </FormLabel>
-
               <Grid container>
                 <Grid item>
                   <FormGroup>
