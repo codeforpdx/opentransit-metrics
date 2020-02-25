@@ -42,7 +42,6 @@ class MapSpider extends Component {
    * A function that returns one of ten colors given a route index.
    * (index modulo 10).
    */
-
   routeColorOptions = d3.scaleQuantize([0, 9], d3.schemeCategory10);
 
   constructor(props) {
