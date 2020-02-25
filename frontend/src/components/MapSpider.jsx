@@ -326,18 +326,6 @@ class MapSpider extends Component {
     );
   };
 
-  generateDirectionPolyline = (route, direction) => {
-    return (
-      <Polyline
-        key={`poly-${route.id}-${direction.id}`}
-        positions={getTripPoints(route, direction)}
-        color="#0177BF"
-        opacity={0.2}
-        weight={1.5}
-      ></Polyline>
-    );
-  };
-
   /**
    * Geolocation button handler.
    */
@@ -532,14 +520,6 @@ class MapSpider extends Component {
             opacity={0.6}
           />
           {/* see http://maps.stamen.com for details */}
-          {routes
-            ? filterRoutes(routes).map(route => {
-                return route.directions.map(direction => {
-                  // const direction = route.directions[0]; // only show first direction
-                  return this.generateDirectionPolyline(route, direction);
-                });
-              })
-            : null}
           <this.DownstreamLines />
           {startMarkers}
           <this.SpiderOriginMarker spiderLatLng={spiderSelection.latLng} />
