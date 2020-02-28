@@ -197,8 +197,8 @@ function Info(props) {
                   </div>
                   <XYPlot
                     xDomain={[0, Math.max(60, Math.round(waitTimes.max) + 5)]}
-                    height={200}
-                    width={400}
+                    height={300}
+                    width={500}
                     onMouseLeave={onMouseLeave}
                   >
                     <HorizontalGridLines />
@@ -261,8 +261,8 @@ function Info(props) {
                   </div>
                   <XYPlot
                     xDomain={[0, Math.max(60, Math.round(tripTimes.max) + 5)]}
-                    height={200}
-                    width={400}
+                    height={300}
+                    width={500}
                     onMouseLeave={onMouseLeave}
                   >
                     <HorizontalGridLines />
@@ -331,8 +331,8 @@ function Info(props) {
               </div>
               <XYPlot
                 xDomain={[0, Math.max(60, Math.round(headways.max) + 5)]}
-                height={200}
-                width={400}
+                height={300}
+                width={500}
                 onMouseLeave={onMouseLeave}
               >
                 <HorizontalGridLines />

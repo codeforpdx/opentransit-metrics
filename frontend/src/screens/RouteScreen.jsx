@@ -48,8 +48,8 @@ function RouteScreen(props) {
         <ControlPanel routes={routes} />
       </Paper>
       <Grid container spacing={0}>
-        <Grid item xs={12} sm={6}>
-          {/* control panel and map are full width for 640px windows or smaller, else half width */}
+        <Grid item xs={12} md={6}>
+          {/* control panel and map are full width for 1050px windows or smaller, else half width */}
           {tripMetrics ||
           tripMetricsError ||
           tripMetricsLoading /* if we have trip metrics or an error, then show the info component */ ? (
@@ -65,7 +65,7 @@ function RouteScreen(props) {
             <RouteSummary />
           )}
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} md={6}>
           <MapStops routes={routes} />
         </Grid>
       </Grid>

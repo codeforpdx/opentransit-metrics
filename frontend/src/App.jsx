@@ -35,6 +35,11 @@ const Screens = {
 };
 
 const theme = createMuiTheme({
+  breakpoints: {
+    values: {
+      md: 1050,
+    }
+  },
   palette: {
     primary: {
       main: '#0177BF',

@@ -158,7 +158,7 @@ class InfoIntervalsOfDay extends Component {
             <XYPlot
               xType="ordinal"
               height={300}
-              width={400}
+              width={500}
               stackBy="y"
               onMouseLeave={this.onMouseLeave}
             >
