@@ -71,10 +71,6 @@
     opacity:1.0;
 }
 
-.app-logo {
-    display:none;
-}
-
 .app-tab-text {
     display:none;
 }
@@ -88,14 +84,28 @@
     }
 }
 
+.MuiFormControl-root.inline-form-control {
+    margin:8px 8px 8px 0px;
+}
+
+.MuiFormControl-root.inline-form-control label {
+    white-space: nowrap;
+}
+
+.MuiCheckbox-root
+{
+    padding:4px !important;
+}
+
+.app-logo {
+    max-height: 38px;
+    padding-top: 5px;
+    padding-left: 10px;
+    display:inline;
+}
+
 @media (min-width: 700px)
 {
-    .app-logo {
-        max-height: 38px;
-        padding-top: 5px;
-        padding-left: 10px;
-        display:inline;
-    }
     .page-title {
        display:inline;
     }

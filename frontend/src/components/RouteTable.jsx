@@ -14,6 +14,8 @@ import InfoIcon from '@material-ui/icons/InfoOutlined';
 import { connect } from 'react-redux';
 import Navlink from 'redux-first-router-link';
 import { filterRoutes } from '../helpers/routeCalculations';
+import DateRangeControl from './DateRangeControl';
+import TimeRangeControl from './TimeRangeControl';
 
 function getComparisonFunction(order, orderBy) {
   // Sort null values to bottom regardless of ascending/descending
@@ -136,7 +138,6 @@ const useToolbarStyles = makeStyles(theme => ({
   },
   title: {
     flex: '0 0 auto',
-    paddingLeft: '3px',
     fontSize: '15px',
   },
   popover: {
@@ -180,6 +181,11 @@ const EnhancedTableToolbar = props => {
           <InfoIcon fontSize="small" />
         </IconButton>
       </div>
+      <div>
+        <DateRangeControl dateRangeSupported />
+        <TimeRangeControl />
+      </div>
+
       <div className={classes.spacer} />
       <div className={classes.actions}>
         {/*

@@ -10,16 +10,26 @@ import BackspaceIcon from '@material-ui/icons/Backspace';
 import red from '@material-ui/core/colors/red';
 import { getDownstreamStopIds } from '../helpers/mapGeometry';
 import ReactSelect from './ReactSelect';
+import DateRangeControl from './DateRangeControl';
+import TimeRangeControl from './TimeRangeControl';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   root: {
-    display: 'flex',
-    flexWrap: 'wrap',
+    paddingLeft: 8,
   },
   formControl: {
-    margin: theme.spacing(1),
+    margin: '8px 8px 8px 0px',
     minWidth: 120,
     maxWidth: '100%',
+  },
+  backspaceIcon: {
+    color: red[900],
+    fontSize: 19,
+    verticalAlign: '-4px',
+    opacity: 0.6,
+    '&:hover': {
+      opacity: 1.0,
+    },
   },
 }));
 
@@ -147,15 +157,9 @@ function ControlPanel(props) {
   const directionStops = selectedDirection ? selectedDirection.stops : [];
 
   const labelStyle = { whiteSpace: 'nowrap' };
-  const backspaceIconStyle = {
-    color: red[900],
-    fontSize: 19,
-    verticalAlign: '-4px',
-    opacity: 0.6,
-  };
 
   return (
-    <div className="ControlPanel">
+    <div className={classes.root}>
       <FormControl className={classes.formControl}>
         <ReactSelect
           onChange={onSelectRouteId}
@@ -170,7 +174,7 @@ function ControlPanel(props) {
                     query: props.query,
                   }}
                 >
-                  <BackspaceIcon style={backspaceIconStyle} />
+                  <BackspaceIcon className={classes.backspaceIcon} />
                 </Navlink>
               </span>
             ),
@@ -209,7 +213,7 @@ function ControlPanel(props) {
                         query: props.query,
                       }}
                     >
-                      <BackspaceIcon style={backspaceIconStyle} />
+                      <BackspaceIcon className={classes.backspaceIcon} />
                     </Navlink>
                   ) : null}
                 </span>
@@ -250,7 +254,7 @@ function ControlPanel(props) {
                           query: props.query,
                         }}
                       >
-                        <BackspaceIcon style={backspaceIconStyle} />
+                        <BackspaceIcon className={classes.backspaceIcon} />
                       </Navlink>
                     ) : null}
                   </span>
@@ -295,7 +299,7 @@ function ControlPanel(props) {
                           query: props.query,
                         }}
                       >
-                        <BackspaceIcon style={backspaceIconStyle} />
+                        <BackspaceIcon className={classes.backspaceIcon} />
                       </Navlink>
                     ) : null}
                   </span>
@@ -323,6 +327,10 @@ function ControlPanel(props) {
           </FormControl>
         </>
       ) : null}
+      <span style={{ whiteSpace: 'nowrap' }}>
+        <DateRangeControl dateRangeSupported />
+        <TimeRangeControl />
+      </span>
     </div>
   );
 }

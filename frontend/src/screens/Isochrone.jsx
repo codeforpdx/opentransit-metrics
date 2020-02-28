@@ -18,7 +18,10 @@ import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import AppBarLogo from '../components/AppBarLogo';
 import SidebarButton from '../components/SidebarButton';
-import DateTimePanel from '../components/DateTimePanel';
+import DateRangeControl from '../components/DateRangeControl';
+import TimeRangeControl from '../components/TimeRangeControl';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
 
 import {
   Polyline
@@ -725,14 +728,19 @@ class Isochrone extends React.Component {
             opacity={0.6}
           />
           {/* see http://maps.stamen.com for details */}
-          <Control position="topleft" className="">
+          <Control position="topleft" className="isochrone-controls">
             <div ref={this.refContainer}>
-              <Grid container className="isochrone-controls" direction="column">
-                <Grid item>
-                  <Typography variant="subtitle2">Max Trip Time</Typography>
-                </Grid>
-                <Grid item>
+                <div>
+                <DateRangeControl dateRangeSupported={false} />
+                </div>
+                <div>
+                <TimeRangeControl />
+                </div>
+                <div>
+                <FormControl className='inline-form-control'>
+                <InputLabel id="maxTripTimeLabel">Max Trip Time</InputLabel>
                   <Select
+                  labelId="maxTripTimeLabel"
                     value={this.state.maxTripMin}
                     onChange={this.handleMaxTripMinChange}
                   >
@@ -742,24 +750,20 @@ class Isochrone extends React.Component {
                       </MenuItem>
                     ))}
                   </Select>
-                </Grid>
-              </Grid>
-              <Grid container className="isochrone-controls" direction="column">
-                <Grid item>
-                  <Typography variant="subtitle2">Routes</Typography>
-                </Grid>
-                <Grid container item direction="row" alignItems="flex-start">
+      </FormControl>
+      </div>
+      <div style={{paddingTop:8}}>
+                <InputLabel shrink id="routesLabel">Routes</InputLabel>
+                <Grid container direction="row" alignItems="flex-start">
                   <Grid item>
                     <Button size='small' onClick={this.selectAllRoutesClicked}>all</Button>
                     <Button size='small' onClick={this.selectNoRoutesClicked}>none</Button>
                   </Grid>
                 </Grid>
-                <Grid item>
                   <List className="isochrone-routes">
                     {(routes || []).map(route => this.makeRouteToggle(route))}
                   </List>
-                </Grid>
-              </Grid>
+                  </div>
             </div>
           </Control>
           <Control position="topright">

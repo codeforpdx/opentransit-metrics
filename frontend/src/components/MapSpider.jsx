@@ -494,7 +494,7 @@ class MapSpider extends Component {
    * Main React render method.
    */
   render() {
-    const { position, zoom, spiderSelection, routes } = this.props;
+    const { position, zoom, spiderSelection } = this.props;
     const { isValidLocation } = this.state;
     const mapStyle = { height: this.state.height };
     const startMarkers = this.getStartMarkers();

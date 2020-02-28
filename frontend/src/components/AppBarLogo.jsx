@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 function AppBarLogo(props) {
   return (
     <Fragment>
-      <NavLink to={{ type: 'DASHBOARD', query: props.query }} exact strict>
+      <NavLink to={{ type: 'HOME', query: props.query }} exact strict>
         <img
           src={`${process.env.PUBLIC_URL}/images/OpenTransit.png?v3`}
           className="app-logo"

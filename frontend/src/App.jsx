@@ -11,22 +11,23 @@ import { Tab, Tabs } from '@material-ui/core';
 import PollIcon from '@material-ui/icons/Poll';
 import PersonPinCircleIcon from '@material-ui/icons/PersonPinCircle';
 import InfoRoundedIcon from '@material-ui/icons/InfoRounded';
-import DateTimePanel from './components/DateTimePanel';
 import AppBarLogo from './components/AppBarLogo';
+import LoadingIndicator from './components/LoadingIndicator';
+
+import NotFound from './screens/NotFound';
 import Isochrone from './screens/Isochrone';
 import DataDiagnostic from './screens/DataDiagnostic';
 import RouteScreen from './screens/RouteScreen';
 import Dashboard from './screens/Dashboard';
-import NotFound from './components/NotFound';
-import Landing from './components/Landing';
-import About from './components/About';
-import LoadingIndicator from './components/LoadingIndicator';
+import About from './screens/About';
+import Home from './screens/Home';
+
 import { Agencies } from './config';
 
-const Components = {
+const Screens = {
   About,
+  Home,
   Isochrone,
-  Landing,
   Dashboard,
   RouteScreen,
   DataDiagnostic,
@@ -45,18 +46,14 @@ const theme = createMuiTheme({
 });
 
 const App = props => {
-  const { page, dispatch } = props;
-  const Component = Components[page];
+  const { page, dispatch, type } = props;
+  const Screen = Screens[page];
 
   const agency = Agencies[0];
 
-  let tabValue = null;
-  if (page === 'RouteScreen' || page === 'Dashboard') {
+  let tabValue = type;
+  if (tabValue === 'ROUTESCREEN') {
     tabValue = 'DASHBOARD';
-  } else if (page === 'Isochrone') {
-    tabValue = 'ISOCHRONE';
-  } else if (page === 'About') {
-    tabValue = 'ABOUT';
   }
 
   const handleTabChange = (event, newValue) => {
@@ -73,7 +70,6 @@ const App = props => {
           <Toolbar variant="dense" disableGutters>
             <AppBarLogo />
             <div className="page-title">{agency.title}</div>
-            <DateTimePanel dateRangeSupported />
             <LoadingIndicator />
             <div className="flex-spacing"></div>
             <Tabs value={tabValue} onChange={handleTabChange}>
@@ -108,7 +104,7 @@ const App = props => {
           </Toolbar>
         </AppBar>
         <div style={{ height: 48 }}>&nbsp;</div>
-        <Component />
+        <Screen />
       </div>
     </ThemeProvider>
   );
@@ -117,6 +113,7 @@ const App = props => {
 const mapStateToProps = state => ({
   page: state.page,
   query: state.location.query,
+  type: state.location.type,
 });
 
 const mapDispatchToProps = dispatch => {
