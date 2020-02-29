@@ -23,7 +23,7 @@ import '../../node_modules/react-vis/dist/style.css';
 /**
  * Bar chart of average and planning percentile wait and time across the day.
  */
-function InfoByDay(props) {
+function TripTimesByDayChart(props) {
   const AVERAGE_TIME = 'average_time';
   const PLANNING_TIME = 'planning_time';
 
@@ -249,4 +249,4 @@ function InfoByDay(props) {
   );
 }
 
-export default InfoByDay;
+export default TripTimesByDayChart;

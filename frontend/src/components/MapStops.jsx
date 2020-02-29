@@ -533,6 +533,7 @@ class MapStops extends Component {
 
 const mapStateToProps = state => ({
   graphParams: state.graphParams,
+  routes: state.routes.data,
   segmentMetricsMap: state.routeMetrics.segmentsMap,
   query: state.location.query,
 });

@@ -3,6 +3,7 @@
  */
 
 import React, { Fragment } from 'react';
+import { connect } from 'react-redux';
 
 import { Table, TableBody, TableHead } from '@material-ui/core';
 
@@ -10,12 +11,7 @@ import { getDistanceInMiles, getTripStops } from '../helpers/mapGeometry';
 import SummaryRow from './SummaryRow';
 import SummaryHeaderRow from './SummaryHeaderRow';
 
-/**
- * Renders an "nyc bus stats" style summary of a route and direction.
- *
- * @param {any} props
- */
-export default function InfoTripSummary(props) {
+function TripSummary(props) {
   const { tripMetrics, graphParams, routes } = props;
 
   const { startStopId, endStopId, directionId } = graphParams;
@@ -213,3 +209,11 @@ export default function InfoTripSummary(props) {
     </Fragment>
   );
 }
+
+const mapStateToProps = state => ({
+  routes: state.routes.data,
+  graphParams: state.graphParams,
+  tripMetrics: state.tripMetrics.data,
+});
+
+export default connect(mapStateToProps)(TripSummary);

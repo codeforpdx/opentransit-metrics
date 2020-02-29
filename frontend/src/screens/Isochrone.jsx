@@ -1,32 +1,32 @@
-/* eslint-disable */
+/* eslint-disable react/sort-comp */
+/* eslint-disable no-console */
+/* eslint-disable no-alert */
+/* eslint-disable no-nested-ternary */
+/* eslint-disable max-len */
+/* eslint-disable no-continue */
+/* eslint-disable react/no-array-index-key */
+/* eslint-disable react/no-access-state-in-setstate */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-unused-vars */
+/* eslint-disable array-callback-return */
+/* eslint-disable consistent-return */
 import React from 'react';
 import { connect } from 'react-redux';
 import { Map, TileLayer } from 'react-leaflet';
 import L, { DomEvent } from 'leaflet';
 import Control from 'react-leaflet-control';
 import Grid from '@material-ui/core/Grid';
-import Typography from '@material-ui/core/Typography';
-import FormGroup from '@material-ui/core/FormGroup';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
-import Toolbar from '@material-ui/core/Toolbar';
-import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
-import AppBarLogo from '../components/AppBarLogo';
-import SidebarButton from '../components/SidebarButton';
-import DateRangeControl from '../components/DateRangeControl';
-import TimeRangeControl from '../components/TimeRangeControl';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
-
-import {
-  Polyline
-} from 'react-leaflet';
-
+import DateRangeControl from '../components/DateRangeControl';
+import TimeRangeControl from '../components/TimeRangeControl';
 
 import { fetchRoutes } from '../actions';
 import {
@@ -170,10 +170,10 @@ class Isochrone extends React.Component {
 
   updateRouteLayers() {
     if (!this.mapRef.current) {
-        console.log("no map element");
-        return;
+      console.log('no map element');
+      return;
     }
-    var map = this.mapRef.current.leafletElement;
+    const map = this.mapRef.current.leafletElement;
     const routes = this.props.routes;
 
     this.routeLayers.forEach(layer => {
@@ -182,20 +182,20 @@ class Isochrone extends React.Component {
     this.routeLayers = [];
 
     if (routes && map) {
-        routes.forEach(route => {
-            if (this.state.enabledRoutes[route.id] !== false) {
-                return route.directions.map(direction => {
-                    const routeLayer = L.polyline(getTripPoints(route, direction), {
-                        color:"#0177BF",
-                        opacity:0.2,
-                        weight:1.5
-                    }).addTo(map);
-                    this.routeLayers.push(routeLayer);
-                });
-            }
-        });
-     }
-   }
+      routes.forEach(route => {
+        if (this.state.enabledRoutes[route.id] !== false) {
+          return route.directions.map(direction => {
+            const routeLayer = L.polyline(getTripPoints(route, direction), {
+              color: '#0177BF',
+              opacity: 0.2,
+              weight: 1.5,
+            }).addTo(map);
+            this.routeLayers.push(routeLayer);
+          });
+        }
+      });
+    }
+  }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.updateDimensions.bind(this));
@@ -207,15 +207,11 @@ class Isochrone extends React.Component {
   }
 
   computeHeight() {
-    return (
-      window.innerHeight - 52
-    );
+    return window.innerHeight - 52;
   }
 
   componentDidUpdate(prevProps) {
-    if (
-      this.props.routes !== prevProps.routes
-    ) {
+    if (this.props.routes !== prevProps.routes) {
       this.updateRouteLayers();
     }
 
@@ -647,8 +643,8 @@ class Isochrone extends React.Component {
   }
 
   enabledRoutesChanged() {
-      this.updateRouteLayers();
-      this.recomputeIsochrones();
+    this.updateRouteLayers();
+    this.recomputeIsochrones();
   }
 
   makeRouteToggle(route) {
@@ -730,17 +726,17 @@ class Isochrone extends React.Component {
           {/* see http://maps.stamen.com for details */}
           <Control position="topleft" className="isochrone-controls">
             <div ref={this.refContainer}>
-                <div>
+              <div>
                 <DateRangeControl dateRangeSupported={false} />
-                </div>
-                <div>
+              </div>
+              <div>
                 <TimeRangeControl />
-                </div>
-                <div>
-                <FormControl className='inline-form-control'>
-                <InputLabel id="maxTripTimeLabel">Max Trip Time</InputLabel>
+              </div>
+              <div>
+                <FormControl className="inline-form-control">
+                  <InputLabel id="maxTripTimeLabel">Max Trip Time</InputLabel>
                   <Select
-                  labelId="maxTripTimeLabel"
+                    labelId="maxTripTimeLabel"
                     value={this.state.maxTripMin}
                     onChange={this.handleMaxTripMinChange}
                   >
@@ -750,20 +746,26 @@ class Isochrone extends React.Component {
                       </MenuItem>
                     ))}
                   </Select>
-      </FormControl>
-      </div>
-      <div style={{paddingTop:8}}>
-                <InputLabel shrink id="routesLabel">Routes</InputLabel>
+                </FormControl>
+              </div>
+              <div style={{ paddingTop: 8 }}>
+                <InputLabel shrink id="routesLabel">
+                  Routes
+                </InputLabel>
                 <Grid container direction="row" alignItems="flex-start">
                   <Grid item>
-                    <Button size='small' onClick={this.selectAllRoutesClicked}>all</Button>
-                    <Button size='small' onClick={this.selectNoRoutesClicked}>none</Button>
+                    <Button size="small" onClick={this.selectAllRoutesClicked}>
+                      all
+                    </Button>
+                    <Button size="small" onClick={this.selectNoRoutesClicked}>
+                      none
+                    </Button>
                   </Grid>
                 </Grid>
-                  <List className="isochrone-routes">
-                    {(routes || []).map(route => this.makeRouteToggle(route))}
-                  </List>
-                  </div>
+                <List className="isochrone-routes">
+                  {(routes || []).map(route => this.makeRouteToggle(route))}
+                </List>
+              </div>
             </div>
           </Control>
           <Control position="topright">
@@ -789,18 +791,20 @@ class Isochrone extends React.Component {
               <div className="isochrone-legend-times">{times}</div>
             </div>
           </Control>
-          {this.state.latLng ? <Control position="bottomleft">
-            <Button
-              variant="contained"
-              color="secondary"
-              size="small"
-              onClick={this.resetMapClicked}
-            >
-              Clear map
-            </Button>
-            <br />
-            <br />
-          </Control> : null}
+          {this.state.latLng ? (
+            <Control position="bottomleft">
+              <Button
+                variant="contained"
+                color="secondary"
+                size="small"
+                onClick={this.resetMapClicked}
+              >
+                Clear map
+              </Button>
+              <br />
+              <br />
+            </Control>
+          ) : null}
         </Map>
       </>
     );
