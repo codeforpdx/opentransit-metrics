@@ -2,8 +2,7 @@ from models import vehicle_positions, util, config
 import argparse
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Download raw state data from tryn-api')
-    parser.add_argument('--route', nargs='*')
+    parser = argparse.ArgumentParser(description='Download raw vehicle state data from S3')
     parser.add_argument('--agency', required=False)
     parser.add_argument('--date', required=True, help='date')
     parser.add_argument('--start-time', required=False, help='start time (hh:mm)')
@@ -12,9 +11,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     agencies = [config.get_agency(args.agency)] if args.agency is not None else config.agencies
-
-    if args.route is not None and args.agency is None:
-        raise Exception("Must specify --agency with --route")
 
     date_str = args.date
 
@@ -34,13 +30,9 @@ if __name__ == '__main__':
         local_start = util.get_localized_datetime(d, start_time_str, tz)
         local_end = util.get_localized_datetime(d, end_time_str, tz)
 
-        if args.route is None:
-            route_ids = [route.id for route in agency.get_route_list()]
-        else:
-            route_ids = args.route
+        route_ids = [route.id for route in agency.get_route_list()]
 
         print(f"agency = {agency.id}")
-        print(f"route_ids = {route_ids}")
         print(f"start = {local_start}")
         print(f"end = {local_end}")
 

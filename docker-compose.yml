@@ -22,11 +22,11 @@ services:
       - ./backend:/app/backend
     environment:
       FLASK_DEBUG: 1
-      TRYNAPI_URL: http://tryn-api.opentransit.city
-      OPENTRANSIT_AGENCY_IDS: muni
+      OPENTRANSIT_S3_BUCKET: opentransit-pdx
+      OPENTRANSIT_AGENCY_IDS: trimet
   react-dev:
     container_name: metrics-react-dev
-    image: metrics-mvp_react-dev:latest
+    image: opentransit-metrics-react-dev:latest
     build:
       context: .
       dockerfile: Dockerfile

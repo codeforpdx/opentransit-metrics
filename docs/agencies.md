@@ -16,7 +16,7 @@ services:
 
 The configuration settings for each agency are:
 
-`id` - must match the agency ID used by orion and tryn-api (e.g. "muni", not "sf-muni")
+`id` - must match the agency ID used by opentransit-collector (e.g. "muni", not "sf-muni")
 
 `provider` - can be set to `nextbus` for Nextbus-based agencies to augment the static GTFS data with data from the Nextbus API.
 
@@ -26,7 +26,7 @@ The configuration settings for each agency are:
 
 `gtfs_url` - public url where static GTFS ZIP file can be downloaded
 
-`route_id_gtfs_field` - the column name in routes.txt in the static GTFS feed where the route ID that is used by OpenTransit is stored. By default this is the column named `route_id`. However, some providers store an opaque route ID in this column that would not have meaning to riders and that is different from the route ID stored by orion and returned by tryn-api. These agencies generally return the route ID in the column named `route_short_name`. The route ID used by metrics-mvp must be the same as the same as the route ID used by orion and tryn-api (for Nextbus agencies, this is the same as the route ID Nextbus). There is an added edge case for Muni where some routes have a `route_short_name` containing a dash in the GTFS file (e.g. T-OWL), but Nextbus returns a route ID containing an underscore (e.g. T_OWL). For now, the code replace dashes with underscores in the route IDs for all agencies using the nextbus provider, although it may be possible that there are other Nextbus agencies that actually do have dashes in the Nextbus route IDs.
+`route_id_gtfs_field` - the column name in routes.txt in the static GTFS feed where the route ID that is used by OpenTransit is stored. By default this is the column named `route_id`. However, some providers store an opaque route ID in this column that would not have meaning to riders and that is different from the route ID stored by opentransit-collector. These agencies generally return the route ID in the column named `route_short_name`. The route ID used by opentransit-metrics must be the same as the same as the route ID used by opentransit-collector for Nextbus agencies, this is the same as the Nextbus route ID). There is an added edge case for Muni where some routes have a `route_short_name` containing a dash in the GTFS file (e.g. T-OWL), but Nextbus returns a route ID containing an underscore (e.g. T_OWL). For now, the code replace dashes with underscores in the route IDs for all agencies using the nextbus provider, although it may be possible that there are other Nextbus agencies that actually do have dashes in the Nextbus route IDs.
 
 `stop_id_gtfs_field` - the column name in stops.txt in the static GTFS feed where the stop ID that is used by OpenTransit is stored. By default this is the column named `stop_id`. However, you can override it with another column from stops.txt, such as `stop_code`. This may be helpful because some agencies may have multiple stop_ids that correspond to the same logical stop.
 

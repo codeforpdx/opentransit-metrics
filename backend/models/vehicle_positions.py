@@ -6,8 +6,10 @@ import math
 from . import config
 import time
 from pathlib import Path
-from datetime import date
+from datetime import datetime, date
 import pandas as pd
+import gzip
+import boto3
 
 class CachedState:
     def __init__(self):
@@ -25,16 +27,16 @@ class CachedState:
         buses = pd.read_csv(
                 cache_path,
                 dtype={
-                    'vid': str,
-                    'did': str,
+                    'vehicleId': str,
+                    'directionId': str,
                 },
                 float_precision='high', # keep precision for rounding lat/lon
             ) \
             .rename(columns={
-                'lat': 'LAT',
-                'lon': 'LON',
-                'vid': 'VID',
-                'did': 'DID',
+                'latitude': 'LAT',
+                'longitude': 'LON',
+                'vehicleId': 'VID',
+                'directionId': 'DID',
                 'secsSinceReport': 'AGE',
                 'timestamp': 'RAW_TIME'
             }) \
@@ -47,6 +49,16 @@ class CachedState:
         buses = buses.sort_values('TIME', axis=0)
 
         return buses
+
+def get_key_timestamp(key: str):
+    key_parts = key.split('_')
+    timestamp_str = key_parts[-1].split('.json')[0]
+    return math.floor(int(timestamp_str)/1000) # convert from ms to sec
+
+def get_bucket_hour_prefix(agency_id: str, timestamp) -> str:
+    dt = datetime.utcfromtimestamp(timestamp)
+    dt_path_segment = dt.strftime('%Y/%m/%d/%H')
+    return f'state/v1/{agency_id}/{dt_path_segment}/'
 
 def get_state(agency_id: str, d: date, start_time, end_time, route_ids) -> CachedState:
     # don't try to fetch historical vehicle data from the future
@@ -71,56 +83,61 @@ def get_state(agency_id: str, d: date, start_time, end_time, route_ids) -> Cache
         print('state already cached')
         return state
 
-    # Request data from trynapi in smaller chunks to avoid internal server errors.
-    # The more routes we have, the smaller our chunk size needs to be in order to
-    # avoid getting internal server errors from trynapi.
-
-    # likely need to set smaller max chunk size via TRYNAPI_MAX_CHUNK env var
-    # if trynapi is reading from orion-raw bucket because trynapi loads a ton of extra
-    # unused data into memory from the restbus API output, mostly from the _links field
-    # returned by http://restbus.info/api/agencies/sf-muni/vehicles
-    # which causes the memory usage to be probably 5x higher
-    trynapi_max_chunk = os.environ.get('TRYNAPI_MAX_CHUNK')
-    if trynapi_max_chunk is None:
-        trynapi_max_chunk = 720
-    else:
-        trynapi_max_chunk = int(trynapi_max_chunk)
-    trynapi_min_chunk = 15
-
-    chunk_minutes = math.ceil(trynapi_max_chunk / len(route_ids))
-    chunk_minutes = max(chunk_minutes, trynapi_min_chunk)
-
-    print(f"chunk_minutes = {chunk_minutes}")
-
-    chunk_start_time = start_time
-    allow_chunk_error = True # allow up to one trynapi error before raising an exception
-
     state_cache_dir = Path(get_state_cache_dir(agency_id))
     if not state_cache_dir.exists():
         state_cache_dir.mkdir(parents = True, exist_ok = True)
 
-    remove_route_temp_cache(agency_id)
-    while chunk_start_time < end_time:
-        # download trynapi data in chunks; each call return data for all routes
-        chunk_end_time = min(chunk_start_time + 60 * chunk_minutes, end_time)
-        chunk_states = get_chunk_state(
-            agency_id,
-            chunk_start_time,
-            chunk_end_time,
-            uncached_route_ids,
-            chunk_minutes,
-            allow_chunk_error,
-        )
-        chunk_start_time = chunk_end_time
-        if chunk_states == False:
-            allow_chunk_error = False
-            continue
-        for chunk_state in chunk_states:
-            write_chunk_state(chunk_state, agency_id)
+    cur_time = start_time
 
-    # cache state per route so we don't have to request it again
-    # if a route appears in a different list of routes
-    for route_id in uncached_route_ids:
+    # UTC hours always start with a timestamp at multiples of 3600 seconds
+    start_hour = start_time - (start_time % 3600)
+
+    hour_prefixes = [
+        get_bucket_hour_prefix(agency_id, timestamp)
+        for timestamp in range(int(start_hour), int(end_time), 3600)
+    ]
+
+    seen_timestamps = {}
+
+    remove_route_temp_cache(agency_id)
+
+    s3_bucket = config.s3_bucket
+
+    s3 = boto3.resource("s3")
+    bucket = s3.Bucket(s3_bucket)
+
+    for hour_prefix in hour_prefixes:
+        print(hour_prefix)
+
+        route_csv_lines = {}
+        for obj in bucket.objects.filter(Prefix=hour_prefix):
+            timestamp = get_key_timestamp(obj.key)
+            if timestamp >= start_time and timestamp < end_time and timestamp not in seen_timestamps:
+                print(obj.key)
+                seen_timestamps[timestamp] = True
+
+                data = obj.get()
+                state_json = gzip.decompress(data['Body'].read())
+                vehicles = json.loads(state_json)
+
+                for vehicle in vehicles:
+                    route_id = vehicle['routeId']
+                    vehicle['timestamp'] = timestamp
+
+                    csv_line = ','.join([
+                        str(vehicle.get(vehicle_key, ''))
+                        for vehicle_key in vehicle_keys
+                    ]) + '\n'
+
+                    if route_id not in route_csv_lines:
+                        route_csv_lines[route_id] = []
+                    route_csv_lines[route_id].append(csv_line)
+
+        for route_id, csv_lines in route_csv_lines.items():
+            append_route_csv_lines_to_temp_cache(agency_id, route_id, csv_lines)
+
+    # cache state per route since that's how we need to access it to compute arrival times
+    for route_id in route_ids:
         cache_path = get_cache_path(agency_id, d, start_time, end_time, route_id)
 
         cache_dir = Path(cache_path).parent
@@ -139,7 +156,6 @@ def get_state(agency_id: str, d: date, start_time, end_time, route_ids) -> Cache
 
     return state
 
-
 def validate_agency_id(agency_id: str):
     if re.match('^[\w\-]+$', agency_id) is None:
         raise Exception(f"Invalid agency: {agency_id}")
@@ -156,7 +172,7 @@ def get_state_cache_dir(agency_id):
     return os.path.join(
         source_dir,
         'data',
-        f"state_v2_{agency_id}",
+        f"state_v3_{agency_id}",
     )
 
 def get_route_temp_cache_path(agency_id: str, route_id: str) -> str:
@@ -174,7 +190,7 @@ def remove_route_temp_cache(agency_id: str):
     dir = os.path.join(
         source_dir,
         'data',
-        f"state_v2_{agency_id}"
+        f"state_v3_{agency_id}"
     )
     for path in os.listdir(dir):
         if path.endswith('_temp_cache.csv'):
@@ -187,113 +203,24 @@ def get_cache_path(agency_id: str, d: date, start_time, end_time, route_id) -> s
         f"{str(d)}/state_{agency_id}_{route_id}_{int(start_time)}_{int(end_time)}.csv",
     )
 
-
-def get_chunk_state(
-    agency_id,
-    chunk_start_time,
-    chunk_end_time,
-    uncached_route_ids,
-    chunk_minutes,
-    allow_error,
-):
-    """Makes TrynAPI calls to assemble a chunk and returns list of chunk states,
-    with each state having the fields of routeId and states.
-    Returns False when allow_error is set to True, chunk_minutes is greater than 5,
-    and TrynAPI has an internal server error (data request too large).
-    """
-    chunk_state = get_state_raw(
-        agency_id,
-        chunk_start_time,
-        chunk_end_time,
-        uncached_route_ids,
-    )
-    if 'errors' in chunk_state:
-        # trynapi returns an internal server error if you ask for too much data at once
-        raise Exception(
-            f"trynapi error for time range {chunk_start_time}-{chunk_end_time}: {chunk_state['errors']}"
-        )
-    if 'message' in chunk_state: # trynapi returns an internal server error if you ask for too much data at once
-        error = f"trynapi error for time range {chunk_start_time}-{chunk_end_time}: {chunk_state['message']}"
-        if allow_error and chunk_minutes > 5:
-            print(error)
-            chunk_minutes = math.ceil(chunk_minutes / 2)
-            print(f"chunk_minutes = {chunk_minutes}")
-            return False
-        else:
-            raise Exception(
-                f"trynapi error for time range {chunk_start_time}-{chunk_end_time}: {chunk_state['message']}"
-            )
-    if not ('data' in chunk_state):
-        print(chunk_state)
-        raise Exception(f'trynapi returned no data')
-    return chunk_state['data']['state']['routes']
-
-
-# Properties of each vehicle as returned from tryn-api,
+# Properties of each vehicle as stored by opentransit-collector,
 # used for writing and reading chunk states to and from CSV files
-vehicle_keys = ['vid', 'lat', 'lon', 'did', 'secsSinceReport']
+vehicle_keys = ['timestamp', 'vehicleId', 'latitude', 'longitude', 'directionId', 'secsSinceReport']
 
 def write_csv_header(path):
-    header_keys = ['timestamp'] + vehicle_keys
     with open(path, 'w+') as chunk_out:
-        chunk_out.writelines([','.join(header_keys) + '\n'])
+        chunk_out.writelines([','.join(vehicle_keys) + '\n'])
 
-def write_chunk_state(chunk_state, agency_id):
-    # TODO - use the write functions part of PR #578
-    """Writes chunks to a CSV for the given route in the given directory.
-    Appends states and creates a new file if one does not exist."""
-    route_id = chunk_state['routeId']
-    path = get_route_temp_cache_path(agency_id, route_id)
-    states = chunk_state['states']
-    if len(states) == 0:
+def append_route_csv_lines_to_temp_cache(agency_id, route_id, csv_lines):
+    """Appends vehicle location information to a CSV for the given route in the given agency.
+    Creates a new file if one does not exist."""
+    if len(csv_lines) == 0:
         return
+
+    path = get_route_temp_cache_path(agency_id, route_id)
 
     if not os.path.exists(path):
         write_csv_header(path)
 
     with open(path, 'a') as chunk_out:
-        chunk_lines = []
-        for state in states:
-            timestamp = state['timestamp']
-            for vehicle in state['vehicles']:
-                chunk_line = ','.join(map(str, [timestamp]+ [
-                    vehicle[vehicle_key]
-                    for vehicle_key in vehicle_keys
-                ])) + '\n'
-                chunk_lines.append(chunk_line)
-        chunk_out.writelines(chunk_lines)
-
-def get_state_raw(agency_id, start_time, end_time, route_ids):
-
-    params = f'state(agencyId: {json.dumps(agency_id)}, startTime: {json.dumps(int(start_time))}, endTime: {json.dumps(int(end_time))}, routes: {json.dumps(route_ids)})'
-
-    query = f"""{{
-       {params} {{
-        agencyId
-        startTime
-        routes {{
-          routeId
-          states {{
-            timestamp
-            vehicles {{ vid lat lon did secsSinceReport }}
-          }}
-        }}
-      }}
-    }}"""
-
-    trynapi_url = config.trynapi_url
-
-    print(f'fetching state from {trynapi_url}')
-    print(params)
-
-    query_url = f"{trynapi_url}/graphql?query={query}"
-    r = requests.get(query_url)
-
-    print(f"   response length = {len(r.text)}")
-
-    try:
-        return json.loads(r.text)
-    except:
-        print(f'invalid response from {query_url}: {r.text}')
-        raise
-
+        chunk_out.writelines(csv_lines)
