@@ -127,7 +127,7 @@ def get_state(agency_id: str, d: date, start_time, end_time, route_ids) -> Cache
                     csv_line = ','.join([
                         str(vehicle.get(vehicle_key, ''))
                         for vehicle_key in vehicle_keys
-                    ])
+                    ]) + '\n'
 
                     if route_id not in route_csv_lines:
                         route_csv_lines[route_id] = []
