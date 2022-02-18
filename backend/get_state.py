@@ -1,4 +1,4 @@
-from models import trynapi, util, config
+from models import vehicle_positions, util, config
 import argparse
 
 if __name__ == '__main__':
@@ -44,4 +44,4 @@ if __name__ == '__main__':
         print(f"start = {local_start}")
         print(f"end = {local_end}")
 
-        state = trynapi.get_state(agency.id, d, local_start.timestamp(), local_end.timestamp(), route_ids)
+        state = vehicle_positions.get_state(agency.id, d, local_start.timestamp(), local_end.timestamp(), route_ids)
