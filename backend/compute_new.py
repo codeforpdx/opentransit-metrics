@@ -24,12 +24,12 @@ if __name__ == '__main__':
 
     for agency in agencies:
         agency_id = agency.id
-        s3_path = f"state/{version}/state_{version}_{agency_id}.json"
+        s3_path = f"metrics-state/{version}/metrics-state_{version}_{agency_id}.json"
 
         def save_state(state):
             state_str = json.dumps(state)
             s3 = boto3.resource('s3')
-            print(f'saving state to s3://{s3_bucket}/{s3_path}')
+            print(f'saving metrics state to s3://{s3_bucket}/{s3_path}')
             object = s3.Object(s3_bucket, s3_path)
             object.put(
                 Body=bytes(state_str, 'utf-8'),
