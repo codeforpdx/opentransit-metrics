@@ -1,12 +1,8 @@
-# OpenTransit Metrics MVP
+# OpenTransit Metrics
 
 Welcome to OpenTransit! We're a team of volunteers that use open data to improve public transit systems around the world.
 
-Founded in 2017, we're a team of dozens of engineers, transit junkies, data enthusiasts, product managers, marketers, and others scattered around the world, but with primary bases in San Francisco and Portland, Oregon.
-
-[Learn more at our official website](http://bit.ly/opentransitsf) or learn about our parent organization, [Code for America](https://www.codeforamerica.org/).
-
-If you'd like to work with us, get in touch on our Slack channel! [Join the Code for SF Slack](http://c4sf.me/slack) and find the `#opentransit` channel. We're excited to partner with transit agencies, journalists, and other data junkies across the world. See below for instructions on joining our team of contributors.
+If you'd like to work with us, get in touch on our Slack channel! [Join the Code for PDX Slack](https://join.slack.com/t/codeforpdx/shared_invite/zt-4msr5np3-n5qBye3GG~4hA_7XZkczgA) and find the `#opentransit-pdx` channel. We're excited to partner with transit agencies, journalists, and other data junkies across the world. See below for instructions on joining our team of contributors.
 
 ## About this repository
 
@@ -16,11 +12,11 @@ The app currently supports San Francisco and Portland, but we're working to gene
 
 ## Getting involved
 
-[Our onboarding doc](http://bit.ly/opentransit-onboarding) is a great way to get started. It'll provide you instructions on joining our GitHub organization, our Slack, our Google Drive, etc.
+[Our onboarding doc](https://bit.ly/opentransitpdx) is a great way to get started. It'll provide you instructions on joining our GitHub organization, our Slack, our Google Drive, etc.
 
 ### Contributing
 
-Once you've followed the instructions on the onboarding doc, visit our Issues page and [identify good first issues](https://github.com/trynmaps/metrics-mvp/labels/Good%20First%20Issue) to find a good project to get started on.
+Once you've followed the instructions on the onboarding doc, visit our Issues page and [identify good first issues](https://github.com/codeforpdx/opentransit-metrics/labels/Good%20First%20Issue) to find a good project to get started on.
 
 Our Slack is very active, so don't hesitate to ask there if you need guidance or suggestions on picking a project!
 
@@ -96,7 +92,7 @@ Then copy the link to this app and paste it in the PR.
 
 #### How Deployment Works
 
-Once a PR is merged into master, Google Cloud Build  will automatically build
+(**TODO**) Once a PR is merged into master, Google Cloud Build  will automatically build
 the latest code and deploy it to a cluster on Google Kubernetes Engine (GKE).
 The build steps are defined in `cloudbuild.yaml`.
 
@@ -113,7 +109,7 @@ The build steps are defined in `cloudbuild.yaml`.
 package managers offer similar performance, we were already using NPM for backend
 package management, and the Yarn roadmap did not offer compelling
 improvements going forward.
-- **React** - Selected for popularity, simple view, and speedy virutal DOM. Code lives in the `/frontend` directory.  It was built using
+- **React** - Selected for popularity, simple view, and speedy virtual DOM. Code lives in the `/frontend` directory.  It was built using
 [Create React App](https://facebook.github.io/create-react-app/docs/folder-structure).
 - **Material UI** - which we use over Bootstrap since MUI doesn't rely on jQuery. It has a
 popular React framework and looks great on mobile.
@@ -133,8 +129,7 @@ popular React framework and looks great on mobile.
 - **Pandas** - much of the data processing logic is implemented using Pandas data frames, e.g. when computing arrival times from raw GPS data.
 - **NumPy** - algorithms involving arrays are implemented using Numpy for better performance, e.g. computing wait times and trip times.
 - **Amazon S3** - the backend stores various data files (including route configuration, timetables, historical arrival times, and precomputed stats) as publicly-readable gzipped JSON files in S3, allowing the frontend to fetch data directly from S3 without hitting the Flask backend, and allowing multiple developers to share the same data without having to compute it themselves.
-- **orion** - A node.js app in a separate repo (https://github.com/trynmaps/orion) which fetches the raw GPS location data for all vehicles in a transit agency every 15 seconds and stores the data in S3.
-- **tryn-api** - A node.js app in a separate repo (https://github.com/trynmaps/tryn-api) which implements another GraphQL API that the backend uses to fetch the stored GPS location data from S3.
+- **opentransit-collector** - A node.js app in a separate repo (https://github.com/codeforpdx/opentransit-collector) which fetches the raw GPS location data for all vehicles in a transit agency every 15 seconds and stores the data in S3.
 - **Unittest** - Framework for testing the backend Python code.
 
 ## Notes for developers
@@ -164,11 +159,12 @@ and CHOKIDAR_USEPOLLING is not necessary on Mac OS X to automatically recompile 
 
 ### Configuring the displayed transit agency
 
-By default, the app shows statistics for San Francisco Muni. You can configure the transit agency displayed in the web app by setting the OPENTRANSIT_AGENCY_IDS environment variable.
+By default, the app shows statistics for TriMet in Portland, Oregon. You can configure the transit agency displayed in the web app by setting the OPENTRANSIT_AGENCY_IDS environment variable.
 
 Other available agency IDs include:
 - `trimet` (TriMet in Portland, Oregon)
 - `portland-sc` (Portland Streetcar)
+- `muni` (San Francisco Muni)
 
 To set this environment variable in development when using Docker, create a file named docker-compose.override.yml file in the root directory of this repository, like so:
 
@@ -177,7 +173,7 @@ version: "3.7"
 services:
   flask-dev:
     environment:
-      OPENTRANSIT_AGENCY_IDS: trimet
+      OPENTRANSIT_AGENCY_IDS: portland-sc
 ```
 
 After changing docker-compose.override.yml, you will need to re-run `docker-compose up` for the changes to take effect.

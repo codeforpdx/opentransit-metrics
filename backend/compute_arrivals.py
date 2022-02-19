@@ -1,4 +1,4 @@
-from models import arrival_history, util, trynapi, eclipses, config
+from models import arrival_history, util, vehicle_positions, eclipses, config
 import argparse
 from datetime import datetime, date, timedelta
 import time
@@ -19,7 +19,7 @@ def compute_arrivals_for_date_and_start_hour(d: date, start_hour: int,
 
     t1 = time.time()
 
-    state = trynapi.get_state(agency.id, d, start_time, end_time, route_ids)
+    state = vehicle_positions.get_state(agency.id, d, start_time, end_time, route_ids)
 
     print(f'retrieved state in {round(time.time()-t1,1)} sec')
 

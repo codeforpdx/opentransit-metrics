@@ -1,7 +1,5 @@
 import os, re, yaml, pytz
 
-trynapi_url = os.environ.get("TRYNAPI_URL", "http://tryn-api")
-
 s3_bucket = os.environ.get("OPENTRANSIT_S3_BUCKET", 'opentransit-data')
 
 agency_ids = os.environ.get("OPENTRANSIT_AGENCY_IDS", 'muni').split(',')

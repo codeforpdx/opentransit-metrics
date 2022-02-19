@@ -11,10 +11,9 @@ Then, you can run the backend command line scripts from this shell within the Do
 
 ## Data storage
 
-The backend stores data such as route configuration, computed arrival times, and wait time/trip time stats in a bucket in Amazon S3. By default, this data is stored in the `opentransit-data` bucket.
-(This is different from the `orion-vehicles` S3 bucket used by orion and tryn-api for the raw vehicle location data.)
+The backend stores data such as route configuration, computed arrival times, and wait time/trip time stats in a bucket in Amazon S3. By default, this is the same S3 bucket used by opentransit-collector to store the raw vehicle location data.
 
-Most developers do not have access to write new data to the `opentransit-data` bucket. Writing data to S3 is generally not necessary for developers working on frontend React code.
+Most developers do not have access to write new data to the `opentransit-pdx` bucket. Writing data to S3 is generally not necessary for developers working on frontend React code.
 If you are modifying backend code that stores data in S3, or if you would like to set up an independent instance of OpenTransit with your own data,
 you can create an S3 bucket in your own AWS account.
 
