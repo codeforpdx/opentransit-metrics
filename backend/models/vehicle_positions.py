@@ -10,6 +10,13 @@ from datetime import datetime, date
 import pandas as pd
 import gzip
 import boto3
+import aiohttp
+import asyncio
+import functools
+
+# Properties of each vehicle as stored by opentransit-collector,
+# used for writing and reading chunk states to and from CSV files
+vehicle_keys = ['timestamp','vehicleId', 'latitude', 'longitude']
 
 class CachedState:
     def __init__(self):
@@ -28,7 +35,6 @@ class CachedState:
                 cache_path,
                 dtype={
                     'vehicleId': str,
-                    'directionId': str,
                 },
                 float_precision='high', # keep precision for rounding lat/lon
             ) \
@@ -36,16 +42,10 @@ class CachedState:
                 'latitude': 'LAT',
                 'longitude': 'LON',
                 'vehicleId': 'VID',
-                'directionId': 'DID',
-                'secsSinceReport': 'AGE',
-                'timestamp': 'RAW_TIME'
+                'timestamp': 'TIME'
             }) \
-            .reindex(['RAW_TIME', 'VID', 'LAT', 'LON', 'DID', 'AGE'], axis='columns')
+            .reindex(['TIME', 'VID', 'LAT', 'LON'], axis='columns')
 
-        # adjust each observation time for the number of seconds old the GPS location was when the observation was recorded
-        buses['TIME'] = (buses['RAW_TIME'] - buses['AGE'].fillna(0)) #.astype(np.int64)
-
-        buses = buses.drop(['RAW_TIME','AGE'], axis=1)
         buses = buses.sort_values('TIME', axis=0)
 
         return buses
@@ -59,6 +59,60 @@ def get_bucket_hour_prefix(agency_id: str, timestamp) -> str:
     dt = datetime.utcfromtimestamp(timestamp)
     dt_path_segment = dt.strftime('%Y/%m/%d/%H')
     return f'state/v1/{agency_id}/{dt_path_segment}/'
+
+async def fetch_state_object(session, s3_key, timestamp, route_csv_lines):
+
+    s3_url = f"http://{config.s3_bucket}.s3.amazonaws.com/{s3_key}"
+
+    async with session.get(s3_url) as r:
+        print(s3_url)
+
+        if r.status == 404:
+            raise FileNotFoundError(f"{s3_url} not found")
+        if r.status == 403:
+            raise FileNotFoundError(f"{s3_url} not found or access denied")
+
+        text = await r.text()
+
+        if r.status != 200:
+            raise Exception(f"Error fetching {s3_url}: HTTP {r.status}: {text}")
+
+        vehicles = json.loads(text)
+
+        append_vehicles_to_csv(vehicles, timestamp, route_csv_lines)
+
+def append_vehicles_to_csv(vehicles, timestamp, route_csv_lines):
+    for vehicle in vehicles:
+        route_id = vehicle['routeId']
+
+        if route_id not in route_csv_lines:
+            route_csv_lines[route_id] = []
+
+        # adjust each observation time for the number of seconds old the GPS location was when the observation was recorded
+        vehicle['timestamp'] = timestamp - vehicle.get('secsSinceReport', 0)
+
+        route_csv_lines[route_id].append(','.join([
+            str(vehicle.get(vehicle_key, ''))
+            for vehicle_key in vehicle_keys
+        ]) + '\n')
+
+async def fetch_state_objects(s3_keys_and_timestamps, route_csv_lines):
+    conn = aiohttp.TCPConnector(limit=8)
+    async with aiohttp.ClientSession(connector=conn) as session:
+        tasks = []
+        for s3_key, timestamp in s3_keys_and_timestamps:
+            task = asyncio.create_task(fetch_state_object(session, s3_key, timestamp, route_csv_lines))
+            tasks.append(task)
+
+        return await asyncio.gather(*tasks)
+
+def get_s3_keys_and_timestamps_with_prefix(bucket, key_prefix, start_time, end_time):
+    res = []
+    for obj in bucket.objects.filter(Prefix=key_prefix):
+        timestamp = get_key_timestamp(obj.key)
+        if timestamp >= start_time and timestamp < end_time:
+            res.append((obj.key, timestamp))
+    return res
 
 def get_state(agency_id: str, d: date, start_time, end_time, route_ids) -> CachedState:
     # don't try to fetch historical vehicle data from the future
@@ -97,64 +151,73 @@ def get_state(agency_id: str, d: date, start_time, end_time, route_ids) -> Cache
         for timestamp in range(int(start_hour), int(end_time), 3600)
     ]
 
-    seen_timestamps = {}
-
     remove_route_temp_cache(agency_id)
+    route_temp_files = {}
 
-    s3_bucket = config.s3_bucket
+    try:
+        # cache state per route since that's how we need to access it to compute arrival times
+        for route_id in route_ids:
+            temp_cache_path = get_route_temp_cache_path(agency_id, route_id)
 
-    s3 = boto3.resource("s3")
-    bucket = s3.Bucket(s3_bucket)
+            route_temp_file = open(temp_cache_path, 'w+')
 
-    for hour_prefix in hour_prefixes:
-        print(hour_prefix)
+            route_temp_files[route_id] = route_temp_file
 
-        route_csv_lines = {}
-        for obj in bucket.objects.filter(Prefix=hour_prefix):
-            timestamp = get_key_timestamp(obj.key)
-            if timestamp >= start_time and timestamp < end_time and timestamp not in seen_timestamps:
-                print(obj.key)
-                seen_timestamps[timestamp] = True
+            # write CSV header
+            route_temp_file.write(','.join(vehicle_keys) + '\n')
 
-                data = obj.get()
-                state_json = gzip.decompress(data['Body'].read())
-                vehicles = json.loads(state_json)
+        s3_bucket = config.s3_bucket
 
-                for vehicle in vehicles:
-                    route_id = vehicle['routeId']
-                    vehicle['timestamp'] = timestamp
+        s3 = boto3.resource("s3")
+        bucket = s3.Bucket(s3_bucket)
 
-                    csv_line = ','.join([
-                        str(vehicle.get(vehicle_key, ''))
-                        for vehicle_key in vehicle_keys
-                    ]) + '\n'
+        for hour_prefix in hour_prefixes:
+            print(hour_prefix)
 
-                    if route_id not in route_csv_lines:
-                        route_csv_lines[route_id] = []
-                    route_csv_lines[route_id].append(csv_line)
+            route_csv_lines = {}
+            s3_keys_and_timestamps = get_s3_keys_and_timestamps_with_prefix(bucket, hour_prefix, start_time, end_time)
 
-        for route_id, csv_lines in route_csv_lines.items():
-            append_route_csv_lines_to_temp_cache(agency_id, route_id, csv_lines)
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(fetch_state_objects(s3_keys_and_timestamps, route_csv_lines))
 
-    # cache state per route since that's how we need to access it to compute arrival times
-    for route_id in route_ids:
-        cache_path = get_cache_path(agency_id, d, start_time, end_time, route_id)
+            append_csv_lines_to_temp_files(route_csv_lines, route_temp_files)
 
-        cache_dir = Path(cache_path).parent
-        if not cache_dir.exists():
-            cache_dir.mkdir(parents = True, exist_ok = True)
+        created_cache_dir = False
 
-        temp_cache_path = get_route_temp_cache_path(agency_id, route_id)
-        if not os.path.exists(temp_cache_path):
-            # create empty cache file so that get_state doesn't need to request routes with no data again
-            # if it is called again later
-            write_csv_header(temp_cache_path)
+        for route_id in route_ids:
+            cache_path = get_cache_path(agency_id, d, start_time, end_time, route_id)
 
-        os.rename(temp_cache_path, cache_path)
+            if not created_cache_dir:
+                cache_dir = Path(cache_path).parent
+                if not cache_dir.exists():
+                    cache_dir.mkdir(parents = True, exist_ok = True)
+                created_cache_dir = True
 
-        state.add(route_id, cache_path)
+            route_temp_file = route_temp_files[route_id]
+
+            temp_cache_path = route_temp_file.name
+
+            route_temp_file.close()
+            del route_temp_files[route_id]
+
+            os.rename(temp_cache_path, cache_path)
+
+            state.add(route_id, cache_path)
+    finally:
+        for route_id, f in route_temp_files.items():
+            f.close()
 
     return state
+
+def append_csv_lines_to_temp_files(route_csv_lines, route_temp_files):
+    # the CSV lines are likely not in chronological order since state files are fetched
+    # asynchronously, but it doesn't matter because they are sorted by CachedState.get_for_route
+    # after adjusting for secsSinceReport
+    for route_id, csv_lines in route_csv_lines.items():
+        route_temp_file = route_temp_files.get(route_id, None)
+
+        if route_temp_file is not None:
+            route_temp_file.writelines(csv_lines)
 
 def validate_agency_id(agency_id: str):
     if re.match('^[\w\-]+$', agency_id) is None:
@@ -166,6 +229,7 @@ def validate_agency_route_path_attributes(agency_id: str, route_id: str):
     if re.match('^[\w\-]+$', route_id) is None:
         raise Exception(f"Invalid route id: {route_id}")
 
+@functools.lru_cache()
 def get_state_cache_dir(agency_id):
     validate_agency_id(agency_id)
     source_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -177,7 +241,6 @@ def get_state_cache_dir(agency_id):
 
 def get_route_temp_cache_path(agency_id: str, route_id: str) -> str:
     validate_agency_route_path_attributes(agency_id, route_id)
-    source_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     return os.path.join(
         get_state_cache_dir(agency_id),
         f"state_{agency_id}_{route_id}_temp_cache.csv",
@@ -186,12 +249,7 @@ def get_route_temp_cache_path(agency_id: str, route_id: str) -> str:
 def remove_route_temp_cache(agency_id: str):
     """Removes all files with the ending temp_cache.csv in the
     source data directory"""
-    source_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    dir = os.path.join(
-        source_dir,
-        'data',
-        f"state_v3_{agency_id}"
-    )
+    dir = get_state_cache_dir(agency_id)
     for path in os.listdir(dir):
         if path.endswith('_temp_cache.csv'):
             os.remove(os.path.join(dir, path))
@@ -202,25 +260,3 @@ def get_cache_path(agency_id: str, d: date, start_time, end_time, route_id) -> s
         get_state_cache_dir(agency_id),
         f"{str(d)}/state_{agency_id}_{route_id}_{int(start_time)}_{int(end_time)}.csv",
     )
-
-# Properties of each vehicle as stored by opentransit-collector,
-# used for writing and reading chunk states to and from CSV files
-vehicle_keys = ['timestamp', 'vehicleId', 'latitude', 'longitude', 'directionId', 'secsSinceReport']
-
-def write_csv_header(path):
-    with open(path, 'w+') as chunk_out:
-        chunk_out.writelines([','.join(vehicle_keys) + '\n'])
-
-def append_route_csv_lines_to_temp_cache(agency_id, route_id, csv_lines):
-    """Appends vehicle location information to a CSV for the given route in the given agency.
-    Creates a new file if one does not exist."""
-    if len(csv_lines) == 0:
-        return
-
-    path = get_route_temp_cache_path(agency_id, route_id)
-
-    if not os.path.exists(path):
-        write_csv_header(path)
-
-    with open(path, 'a') as chunk_out:
-        chunk_out.writelines(csv_lines)
