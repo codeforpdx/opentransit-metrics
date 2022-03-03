@@ -236,7 +236,7 @@ def get_state_cache_dir(agency_id):
     return os.path.join(
         source_dir,
         'data',
-        f"state_v3_{agency_id}",
+        f"state_v4_{agency_id}",
     )
 
 def get_route_temp_cache_path(agency_id: str, route_id: str) -> str:
