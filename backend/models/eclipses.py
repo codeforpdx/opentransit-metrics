@@ -22,7 +22,6 @@ def resample_bus(bus: pd.DataFrame) -> pd.DataFrame:
         # adjacent in the buses frame both happen to be near the same stop
         return (
             vid,
-            '',
             0,
             0,
             0,
@@ -57,7 +56,6 @@ def resample_bus(bus: pd.DataFrame) -> pd.DataFrame:
         # looping by index over all of these arrays is more verbose than adding these columns to
         # the bus dataframe and looping using itertuples(), but this is much faster!
         vid = bus['VID'].values[0]
-        did_values = bus['DID'].values
 
         # obs_group is a counter associated with each resampled GPS observation
         # that lets us group consecutive GPS observations for a particular vehicle.
@@ -66,7 +64,6 @@ def resample_bus(bus: pd.DataFrame) -> pd.DataFrame:
         obs_group = 1
 
         for i in range(0, len(time_values)):
-            did_i = did_values[i]
             num_samples_i = int(num_samples_values[i])
             dt_i = dt_values[i]
 
@@ -80,7 +77,6 @@ def resample_bus(bus: pd.DataFrame) -> pd.DataFrame:
                     frac = j / num_samples_i
                     new_rows.append((
                         vid,
-                        did_i,
                         prev_lat_i + lat_diff_i * frac,
                         prev_lon_i + lon_diff_i * frac,
                         prev_time_i + dt_i * frac,
@@ -98,7 +94,6 @@ def resample_bus(bus: pd.DataFrame) -> pd.DataFrame:
 
             new_rows.append((
                 vid,
-                did_i,
                 lat_values[i],
                 lon_values[i],
                 time_values[i],
@@ -109,7 +104,7 @@ def resample_bus(bus: pd.DataFrame) -> pd.DataFrame:
         new_rows.append(make_separator_row(vid))
 
     resampled_bus = pd.DataFrame(new_rows, columns=[
-        'VID','DID','LAT','LON','TIME','OBS_GROUP'
+        'VID','LAT','LON','TIME','OBS_GROUP'
         # 'INTERP' # whether a sample was interpolated isn't needed by algorithm, but useful for debugging
     ])
     resampled_bus['TIME'] = resampled_bus['TIME'].astype(np.int64)
@@ -234,7 +229,6 @@ def find_arrivals(agency: config.Agency, route_state: pd.DataFrame, route_config
                 adjacent_stop_ids=adjacent_stop_ids,
                 radius=radius,
                 is_terminal=is_terminal,
-                use_reported_direction=False
             )
 
             possible_arrivals_arr.append(possible_arrivals)
@@ -258,8 +252,7 @@ def find_arrivals(agency: config.Agency, route_state: pd.DataFrame, route_config
     return arrivals
 
 def get_possible_arrivals_for_stop(buses: pd.DataFrame, stop_id: str,
-    direction_id=None,            # if use_reported_direction is False, the DID field will have this value
-    use_reported_direction=False, # if use_reported_direction is True, the DID field will have the reported value from the buses frame
+    direction_id=None,            # DID field will be set to this value
     stop_index=-1,                # STOP_INDEX field will be set to this value
     adjacent_stop_ids=[],
     radius=200,
@@ -319,9 +312,6 @@ def get_possible_arrivals_for_stop(buses: pd.DataFrame, stop_id: str,
     all_vid_values = eclipses['VID'].values
     all_obs_group_values = eclipses['OBS_GROUP'].values
 
-    if use_reported_direction:
-        all_did_values = eclipses['DID'].values
-
     def calc_nadir(eclipse_start_index, eclipse_end_index) -> tuple:
         # this is called in the inner loop so it needs to be very fast
         # or computing arrival times will take much longer!
@@ -353,7 +343,7 @@ def get_possible_arrivals_for_stop(buses: pd.DataFrame, stop_id: str,
             time_values[at_stop_indexes[-1]], # departure time
             min_dist,
             stop_id,
-            all_did_values[eclipse_start_index] if use_reported_direction else direction_id,
+            direction_id,
             stop_index,
             all_obs_group_values[eclipse_start_index],
             -1

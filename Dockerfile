@@ -11,6 +11,7 @@ FROM python:3.7.2-slim-stretch AS flask-dev
 RUN mkdir -p /app/backend && \
     apt-get update && \
     apt-get install -y curl nano less sudo
+RUN pip install pip==22.0.3
 COPY ./backend/requirements.txt /app/backend/requirements.txt
 RUN pip install -r /app/backend/requirements.txt
 COPY ./backend /app/backend
