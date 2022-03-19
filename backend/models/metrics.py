@@ -7,6 +7,8 @@ from . import wait_times, util, arrival_history, trip_times, constants, timetabl
 import pandas as pd
 import numpy as np
 
+from graphql import GraphQLError
+
 # Represents a range of days with a time range within each day.
 # RouteMetrics and AgencyMetrics can calculate various statistics over a range.
 class Range:
@@ -362,7 +364,11 @@ class TripIntervalMetrics:
         return self.route_metrics.get_wait_time_stats(self.direction_id, self.start_stop_id, self.rng, scheduled=scheduled)
 
     def get_headway_schedule_deltas(self):
-        return self.route_metrics.get_headway_schedule_deltas(self.direction_id, self.start_stop_id, self.rng)
+        try:
+            results = self.route_metrics.get_headway_schedule_deltas(self.direction_id, self.start_stop_id, self.rng)
+            return results
+        except Exception as e:
+            raise GraphQLError("error loading data for the requested calculation: direction_id: {}, start_stop_id: {}, exact error: {}".format(self.direction_id, self.start_stop_id, e))
 
 class SegmentIntervalMetrics:
     def __init__(self, dir_interval_metrics, from_stop_id, to_stop_id):
