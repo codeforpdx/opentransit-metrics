@@ -122,6 +122,10 @@ function RouteScreen(props) {
                 })
               : null}
           </Box>
+          <Box p={2} style={{ overflowX: 'auto' }}>
+            {error ? `If the issues persist, this may be because our systems have not yet calculated the statistics for your 
+            requested date range. Please try again later.` : null}
+          </Box>
         </Grid>
         <Grid item xs={12} md={6}>
           <MapStops />

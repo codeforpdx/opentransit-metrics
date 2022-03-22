@@ -365,8 +365,7 @@ class TripIntervalMetrics:
 
     def get_headway_schedule_deltas(self):
         try:
-            results = self.route_metrics.get_headway_schedule_deltas(self.direction_id, self.start_stop_id, self.rng)
-            return results
+            return self.route_metrics.get_headway_schedule_deltas(self.direction_id, self.start_stop_id, self.rng)
         except Exception as e:
             raise GraphQLError("error loading data for the requested calculation: direction_id: {}, start_stop_id: {}, exact error: {}".format(self.direction_id, self.start_stop_id, e))
 
