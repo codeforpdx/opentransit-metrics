@@ -86,7 +86,12 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-// Displays alert when an invalid location is set
+/**
+ * Displays alert when an invalid date range is set.
+ *
+ * @param {any} props A flag saying to show the alert
+ * @returns A snackbar
+ */
 function NoDaysSelectedAlert(props) {
   return (
     <Snackbar
@@ -130,25 +135,27 @@ function DateRangeControl(props) {
 
   const dateRangeParams = graphParams[targetRange];
 
+  // Add graphParams as state.
   const [localDateRangeParams, setLocalDateRangeParams] = useState(
     dateRangeParams,
   );
 
-  let j;
-  const dowsUsed = [false, false, false, false, false, false, false];
+  // The dates between start date and end date, 24 hours apart.
   const dates = enumerateDaysBetweenDates(
     Moment(localDateRangeParams.startDate, 'YYYY-MM-DD'),
     Moment(localDateRangeParams.date, 'YYYY-MM-DD'),
   );
 
-  for (j = 0; j < dates.length; j++) {
+  // The selected days of the week (which checkboxes are checked).
+  const dowsUsed = [false, false, false, false, false, false, false];
+  for (let j = 0; j < dates.length; j++) {
     dowsUsed[Moment(dates[j]).day()] = true;
   }
 
   // If the combination of the daterange and the days of the week result in
   // at least one day being selected, atLeastOneDaySelected = true
   let atLeastOneDaySelected = false;
-  for (j = 0; j < dowsUsed.length; j++) {
+  for (let j = 0; j < dowsUsed.length; j++) {
     if (
       localDateRangeParams.daysOfTheWeek[j] === true &&
       dowsUsed[j] === true
@@ -157,6 +164,9 @@ function DateRangeControl(props) {
     }
   }
 
+  /**
+   * Syncs our control w/the native date picker.
+   */
   function resetLocalDateRangeParams() {
     setLocalDateRangeParams(dateRangeParams);
   }
@@ -166,13 +176,28 @@ function DateRangeControl(props) {
   }, [dateRangeParams]);
 
   const classes = useStyles();
+
   const [anchorEl, setAnchorEl] = useState(null);
+
+  // Today's date.
   const maxDate = Moment(Date.now()).format('YYYY-MM-DD');
 
+  /**
+   * Handles clicks on the button that expands the date picker.
+   *
+   * @param {any} event The click event.
+   */
   function handleClick(event) {
     setAnchorEl(event.currentTarget);
   }
 
+  /**
+   * Sets the query params in the URL.
+   * Called from various handlers.
+   *
+   * @param {any} newDateRangeParams
+   * @returns
+   */
   function setDateRangeParams(newDateRangeParams) {
     if (
       JSON.stringify(newDateRangeParams) ===
@@ -187,21 +212,40 @@ function DateRangeControl(props) {
     props.updateQuery(fullQueryFromParams(newGraphParams));
   }
 
+  /**
+   * Sets the date range params from the localDateRangeParams (values
+   *  in the component UI).
+   */
   function handleApply() {
     setDateRangeParams(localDateRangeParams);
     setAnchorEl(null);
   }
 
+  /**
+   * Updates the date range in the local state.
+   * Called from the handlers for form changes.
+   *
+   * @param {any} datePayload
+   */
   function updateLocalDateRangeParams(datePayload) {
     const newLocalDateRangeParams = { ...localDateRangeParams, ...datePayload };
     setLocalDateRangeParams(newLocalDateRangeParams);
   }
 
+  /**
+   * Updates the query params in the URL when the form is reset.
+   *
+   * @param {any} datePayload
+   */
   function updateDateRangeParams(datePayload) {
     const newDateRangeParams = { ...dateRangeParams, ...datePayload };
     setDateRangeParams(newDateRangeParams);
   }
 
+  /**
+   * Resets the form.
+   * Called when the "reset" button is clicked.
+   */
   function handleReset() {
     const initialDateRangeParams = initialGraphParams[targetRange];
 
@@ -242,8 +286,9 @@ function DateRangeControl(props) {
   /**
    * Handler that updates the (end) date string in the state.
    * Also keeps startDate no later than date.
+   * Called when "End Date" (maxDate) changes.
    *
-   * @param {any} myDate
+   * @param {any} myDate ChangeEvent
    */
   const setEndDate = myDate => {
     const newDate = myDate.target.value;
@@ -270,8 +315,9 @@ function DateRangeControl(props) {
 
   /**
    * Handler that updates the start date string in the state.
+   * Called when "Start Date" (startDate) changes.
    *
-   * @param {any} myDate
+   * @param {any} myDate ChangeEvent
    */
   const setStartDate = myDate => {
     if (!myDate.target.value) {
@@ -283,9 +329,18 @@ function DateRangeControl(props) {
     }
   };
 
+  /**
+   * Handler that updates the date range in the state.
+   * Called when an element in DATE_RANGES is clicked.
+   *
+   * @param {any} daysBack Number of days back from today
+   */
   const setDateRange = daysBack => {
-    const date = initialGraphParams.date;
-    const startMoment = Moment(date).subtract(daysBack - 1, 'days'); // include end date
+    // End date.
+    const date = initialGraphParams[targetRange].date;
+
+    // Start date as Moment.
+    const startMoment = Moment(date).subtract(daysBack - 1, 'days');
 
     updateLocalDateRangeParams({
       date,
@@ -296,6 +351,11 @@ function DateRangeControl(props) {
     // calling the API.
   };
 
+  /**
+   * Handler that updates the selected days in the state.
+   *
+   * @param {any} event
+   */
   const handleDayChange = event => {
     const day = event.target.value;
     const newDaysOfTheWeek = { ...localDateRangeParams.daysOfTheWeek };
