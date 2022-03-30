@@ -3,6 +3,15 @@ import os
 import pytz
 import numpy as np
 
+# @benji playing around with something here - please ignore :)
+# def log_function_decor(func):
+#     def inner(*args, **kwargs):
+#         with open('/app/backend/data/log_functions.log', 'a') as f:
+#             datetime_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#             f.write(f"{datetime_str} - I'm running this function {func.__name__} in {func.__module__} \n")
+#         func(*args, **kwargs)
+#     return inner
+
 def quantile_sorted(sorted_arr, quantile):
     # For small arrays (less than about 4000 items) np.quantile is significantly
     # slower than sorting the array and picking the quantile out by index. Computing

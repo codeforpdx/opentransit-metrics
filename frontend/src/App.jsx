@@ -19,6 +19,7 @@ import Isochrone from './screens/Isochrone';
 import DataDiagnostic from './screens/DataDiagnostic';
 import RouteScreen from './screens/RouteScreen';
 import Dashboard from './screens/Dashboard';
+import Download from './screens/Download';
 import About from './screens/About';
 import Home from './screens/Home';
 
@@ -31,6 +32,7 @@ const Screens = {
   Dashboard,
   RouteScreen,
   DataDiagnostic,
+  Download,
   NotFound,
 };
 
@@ -104,6 +106,15 @@ const App = props => {
                   </div>
                 }
                 value="ABOUT"
+              />
+              <Tab
+                label={
+                  <div>
+                    <InfoRoundedIcon className="app-tab-icon" />
+                    <span className="app-tab-text"> Download</span>
+                  </div>
+                }
+                value="DOWNLOAD"
               />
             </Tabs>
           </Toolbar>

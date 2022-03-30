@@ -10,6 +10,7 @@ import boto3
 from pathlib import Path
 import gzip
 import numpy as np
+# from models.util import log_function_decor
 
 DefaultVersion = 'v4c'
 
@@ -22,6 +23,7 @@ class ArrivalHistory:
         self.stops_data = stops_data
         self.version = version
 
+    
     def get_data_frame(self, direction_id = None, stop_id = None, vehicle_id = None,
             start_time = None, end_time = None) -> pd.DataFrame:
         '''
@@ -74,7 +76,8 @@ class ArrivalHistory:
                 add_stop(s)
 
         return pd.DataFrame(data = data, columns = columns)
-
+        
+    
     def find_closest_arrival_time(self, stop_id, vehicle_id, time):
 
         closest_time = None
@@ -92,6 +95,7 @@ class ArrivalHistory:
 
         return closest_time
 
+    
     @classmethod
     def from_data(cls, data):
         return cls(
@@ -103,6 +107,7 @@ class ArrivalHistory:
             version = data['version'] if 'version' in data else 'v2',
         )
 
+    
     def get_data(self):
         return {
             'version': self.version,
@@ -113,9 +118,11 @@ class ArrivalHistory:
             'stops': self.stops_data,
         }
 
+
 def from_data_frame(agency_id: str, route_id, arrivals_df: pd.DataFrame, start_time, end_time) -> ArrivalHistory:
     # note: arrival_history module uses timestamps in seconds, but tryn-api uses ms
     return ArrivalHistory(agency_id, route_id, stops_data=make_stops_data(arrivals_df), start_time=start_time, end_time=end_time)
+
 
 def make_stops_data(arrivals: pd.DataFrame):
     stops_data = {}
@@ -139,6 +146,7 @@ def make_stops_data(arrivals: pd.DataFrame):
             }
     return stops_data
 
+
 def get_cache_path(agency_id: str, route_id: str, d: date, version = DefaultVersion) -> str:
     if version is None:
         version = DefaultVersion
@@ -158,6 +166,7 @@ def get_cache_path(agency_id: str, route_id: str, d: date, version = DefaultVers
 
     return os.path.join(util.get_data_dir(), f"arrivals_{version}_{agency_id}/{date_str}/arrivals_{version}_{agency_id}_{date_str}_{route_id}.json")
 
+
 def get_s3_path(agency_id: str, route_id: str, d: date, version = DefaultVersion) -> str:
     if version is None:
         version = DefaultVersion
@@ -165,6 +174,7 @@ def get_s3_path(agency_id: str, route_id: str, d: date, version = DefaultVersion
     date_str = str(d)
     date_path = d.strftime("%Y/%m/%d")
     return f"arrivals/{version}/{agency_id}/{date_path}/arrivals_{version}_{agency_id}_{date_str}_{route_id}.json.gz"
+
 
 def get_by_date(agency_id: str, route_id: str, d: date, version = DefaultVersion) -> ArrivalHistory:
 
@@ -203,6 +213,7 @@ def get_by_date(agency_id: str, route_id: str, d: date, version = DefaultVersion
         f.write(r.text)
 
     return ArrivalHistory.from_data(data)
+
 
 def save_for_date(history: ArrivalHistory, d: date, s3=False):
     data_str = json.dumps(history.get_data())
