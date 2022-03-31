@@ -209,6 +209,9 @@ class RouteMetrics:
 
                 scheduled_departure_time_values = np.sort(timetable_df['DEPARTURE_TIME'].values)
 
+                if len(departure_time_values) < 2 or len(scheduled_departure_time_values) < 2:
+                    continue
+
                 comparison_df = timetables.match_actual_times_to_schedule(
                     departure_time_values,
                     scheduled_departure_time_values
@@ -235,7 +238,9 @@ class RouteMetrics:
 
             headway_delta_arr.append(self.headway_schedule_deltas[key])
 
-        if len(headway_delta_arr) == 1:
+        if len(headway_delta_arr) == 0:
+            return None
+        elif len(headway_delta_arr) == 1:
             return headway_delta_arr[0]
         else:
             return np.concatenate(headway_delta_arr)
@@ -364,10 +369,7 @@ class TripIntervalMetrics:
         return self.route_metrics.get_wait_time_stats(self.direction_id, self.start_stop_id, self.rng, scheduled=scheduled)
 
     def get_headway_schedule_deltas(self):
-        try:
-            return self.route_metrics.get_headway_schedule_deltas(self.direction_id, self.start_stop_id, self.rng)
-        except Exception as e:
-            raise GraphQLError("error loading data for the requested calculation: direction_id: {}, start_stop_id: {}, exact error: {}".format(self.direction_id, self.start_stop_id, e))
+        return self.route_metrics.get_headway_schedule_deltas(self.direction_id, self.start_stop_id, self.rng)
 
 class SegmentIntervalMetrics:
     def __init__(self, dir_interval_metrics, from_stop_id, to_stop_id):
