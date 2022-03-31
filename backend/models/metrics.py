@@ -7,8 +7,6 @@ from . import wait_times, util, arrival_history, trip_times, constants, timetabl
 import pandas as pd
 import numpy as np
 
-from graphql import GraphQLError
-
 # Represents a range of days with a time range within each day.
 # RouteMetrics and AgencyMetrics can calculate various statistics over a range.
 class Range:
