@@ -214,6 +214,38 @@ def get_by_date(agency_id: str, route_id: str, d: date, version = DefaultVersion
 
     return ArrivalHistory.from_data(data)
 
+def save_date_for_user_download(agency_id: str, route_id: str, d: date, version = DefaultVersion):
+    '''
+    '''
+    arrival_df = pd.DataFrame()
+    history = get_by_date(agency_id, route_id, d, version)
+    arrival_data = history.get_data()
+    route_id = arrival_data['route_id']
+    agency = arrival_data['agency']
+    data_start_time = arrival_data['start_time']
+    data_end_time = arrival_data['end_time']
+    file_name = f'arrivals_{agency}_{route_id}_{d}_{data_start_time}_{data_end_time}.csv.gz'
+    stops_data_json = arrival_data['stops']
+    for stop_id in stops_data_json.keys():
+        for direction_id in stops_data_json[stop_id]['arrivals'].keys():
+            one_stop_dir_arrivals = pd.DataFrame(stops_data_json[stop_id]['arrivals'][direction_id])
+            one_stop_dir_arrivals['route_id'] = route_id
+            one_stop_dir_arrivals['agency'] = agency
+            one_stop_dir_arrivals['data_start_time'] = data_start_time
+            one_stop_dir_arrivals['data_end_time'] = data_end_time
+            one_stop_dir_arrivals['stop_id'] = stop_id
+            one_stop_dir_arrivals['direction_id'] = direction_id
+            one_stop_dir_arrivals['date'] = d
+            if arrival_df.empty:
+                arrival_df = one_stop_dir_arrivals.copy()
+            else:
+                arrival_df = arrival_df.append(one_stop_dir_arrivals)
+
+    rename_dict = {'t':'time','e':'departure_time','d':'distance','i':'trip_id', 'v':'vehicle_id'}
+    arrival_w_names_df = arrival_df.rename(columns=rename_dict).copy()
+    # arrival_w_names_df.to_csv(file_name, compression='gzip', index=False)
+    return arrival_w_names_df
+
 
 def save_for_date(history: ArrivalHistory, d: date, s3=False):
     data_str = json.dumps(history.get_data())

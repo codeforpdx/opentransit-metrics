@@ -14,6 +14,10 @@ import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 
+// for exploration
+import { renderDateRange } from '../helpers/dateTime';
+import { fetchRoutes } from '../actions';
+
 import {
   getDaysOfTheWeekLabel,
   renderDateString,
@@ -77,6 +81,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+
 /**
  * Displays alert when an invalid date range is set.
  *
@@ -136,6 +141,8 @@ function DateRangeControl(props) {
     Moment(localDateRangeParams.startDate, 'YYYY-MM-DD'),
     Moment(localDateRangeParams.date, 'YYYY-MM-DD'),
   );
+
+  console.log("dates const = "+ dates);
 
   // The selected days of the week (which checkboxes are checked).
   const dowsUsed = [false, false, false, false, false, false, false];
@@ -201,7 +208,17 @@ function DateRangeControl(props) {
 
     newGraphParams[targetRange] = newDateRangeParams;
     props.updateQuery(fullQueryFromParams(newGraphParams));
+
+    console.log(`render date range from newGraphParams - ${renderDateRange(
+      newGraphParams.firstDateRange,
+    )}`)
+    
+    console.log('newGraphParams ' + newGraphParams)
+
   }
+
+  
+
 
   /**
    * Sets the date range params from the localDateRangeParams (values

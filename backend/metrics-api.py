@@ -1,9 +1,11 @@
 import os
-from flask import Flask, send_from_directory, Response
+from urllib import response
+from flask import Flask, send_from_directory, Response, send_file, make_response
 from flask_cors import CORS
 import json
 from models import schema, config, routeconfig, arrival_history, precomputed_stats
 from flask_graphql import GraphQLView
+import datetime
 #import cProfile
 
 """
@@ -42,6 +44,29 @@ def make_error_response(params, error, status):
         'error': error,
     }
     return Response(json.dumps(data, indent=2), status=status, mimetype='application/json')
+
+@app.route('/api/arrival_download', methods=['GET'])
+def download_arrival_data():
+    '''
+    first step in letting users download arrival data
+    for a particular route on a date (or a range of dates)
+    -----
+    next step is to create a frontend interface to capture the
+    route and date and feed that information into the arrival_history.save_date_for_user_download()
+    function below
+    '''
+
+    date_of_interest = datetime.datetime.strptime('2022-03-10','%Y-%m-%d').date()
+
+    arrival_df = arrival_history.save_date_for_user_download('trimet', '4', date_of_interest, arrival_history.DefaultVersion)
+
+    arrival_csv_object = arrival_df.to_csv(index=False)
+
+    response = make_response(arrival_csv_object)
+    response.headers.set('Content-Type', 'text/csv')
+    response.headers.set('Content-Disposition', 'attachment', filename='arrivals.csv')
+
+    return response
 
 @app.route('/api/js_config', methods=['GET'])
 def js_config():
