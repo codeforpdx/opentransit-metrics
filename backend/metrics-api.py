@@ -3,7 +3,7 @@ from urllib import response
 from flask import Flask, send_from_directory, Response, send_file, make_response
 from flask_cors import CORS
 import json
-from models import schema, config, routeconfig, arrival_history, precomputed_stats
+from models import schema, config, util, routeconfig, arrival_history, precomputed_stats
 from flask_graphql import GraphQLView
 import datetime
 #import cProfile
@@ -55,16 +55,41 @@ def download_arrival_data():
     route and date and feed that information into the arrival_history.save_date_for_user_download()
     function below
     '''
-
+    agency = config.get_agency('trimet')
     date_of_interest = datetime.datetime.strptime('2022-03-10','%Y-%m-%d').date()
 
-    arrival_df = arrival_history.save_date_for_user_download('trimet', '4', date_of_interest, arrival_history.DefaultVersion)
+    start_time_str = '00:00:00'
+    end_time_str = '15:00:00'
+    route_id = '4'
+    direction_id = '1'
+
+    history = arrival_history.get_by_date(agency_id=agency.id, route_id=route_id, d=date_of_interest, version=arrival_history.DefaultVersion)
+    
+    raw_arrival_df = history.get_data_frame(direction_id=direction_id
+                                            ,start_time=util.get_timestamp_or_none(date_of_interest, start_time_str, agency.tz)
+                                            ,end_time=util.get_timestamp_or_none(date_of_interest, end_time_str, agency.tz)
+                                            )
+    # ("VID", "TIME", "DEPARTURE_TIME", "SID", "DID", "DIST", "TRIP")
+    rename_dict = {'TIME':'arrival_time_unix','SID':'stop_id'
+                    ,'DEPARTURE_TIME':'departure_time_unix'
+                    ,'DIST':'distance','TRIP':'trip_id'
+                    ,'DID':'direction_id', 'VID':'vehicle_id'}
+
+    arrival_df = raw_arrival_df.rename(columns=rename_dict).copy()
+
+    arrival_df['route_id'] = route_id
+    arrival_df['agency'] = agency.id
+    arrival_df['date'] = date_of_interest.strftime('%Y-%m-%d')
+
+    ## convert unix timestamp to datetime string
+    arrival_df['arrival_time'] = arrival_df['arrival_time_unix'].apply(lambda x: datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
+    arrival_df['departure_time'] = arrival_df['departure_time_unix'].apply(lambda x: datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
 
     arrival_csv_object = arrival_df.to_csv(index=False)
 
     response = make_response(arrival_csv_object)
     response.headers.set('Content-Type', 'text/csv')
-    response.headers.set('Content-Disposition', 'attachment', filename='arrivals.csv')
+    response.headers.set('Content-Disposition', 'attachment', filename=f"arrivals_{route_id}_{direction_id}_{date_of_interest.strftime('%Y%m%d')}.csv")
 
     return response
 
