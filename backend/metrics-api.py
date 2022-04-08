@@ -49,27 +49,33 @@ def make_error_response(params, error, status):
 def download_arrival_data():
     '''
     first step in letting users download arrival data
-    for a particular route on a date (or a range of dates)
-    -----
-    next step is to create a frontend interface to capture the
-    route and date and feed that information into the arrival_history.save_date_for_user_download()
-    function below
+    based on the filters they have selected in the frontend
     '''
-    agency = config.get_agency('trimet')
-    date_of_interest = datetime.datetime.strptime('2022-03-10','%Y-%m-%d').date()
 
+    # this data will eventually come from the web app
+    # hard coding for now
+    # right now it's only handling 1 date
+    # in the future, we'll need to handle a date range
+    # coming from the web appp interface
+    agency = config.get_agency('trimet')
+    date_str = '2022-03-10'
+    date_of_interest = datetime.datetime.strptime(date_str,'%Y-%m-%d').date()
     start_time_str = '00:00:00'
     end_time_str = '15:00:00'
     route_id = '4'
     direction_id = '1'
 
-    history = arrival_history.get_by_date(agency_id=agency.id, route_id=route_id, d=date_of_interest, version=arrival_history.DefaultVersion)
+    history = arrival_history.get_by_date(agency_id=agency.id
+                                        , route_id=route_id
+                                        , d=date_of_interest
+                                        , version=arrival_history.DefaultVersion)
     
     raw_arrival_df = history.get_data_frame(direction_id=direction_id
                                             ,start_time=util.get_timestamp_or_none(date_of_interest, start_time_str, agency.tz)
                                             ,end_time=util.get_timestamp_or_none(date_of_interest, end_time_str, agency.tz)
                                             )
-    # ("VID", "TIME", "DEPARTURE_TIME", "SID", "DID", "DIST", "TRIP")
+
+    #raw_arrival_df field names:("VID", "TIME", "DEPARTURE_TIME", "SID", "DID", "DIST", "TRIP")
     rename_dict = {'TIME':'arrival_time_unix','SID':'stop_id'
                     ,'DEPARTURE_TIME':'departure_time_unix'
                     ,'DIST':'distance','TRIP':'trip_id'
@@ -77,6 +83,7 @@ def download_arrival_data():
 
     arrival_df = raw_arrival_df.rename(columns=rename_dict).copy()
 
+    # add fields for user context
     arrival_df['route_id'] = route_id
     arrival_df['agency'] = agency.id
     arrival_df['date'] = date_of_interest.strftime('%Y-%m-%d')
@@ -87,6 +94,9 @@ def download_arrival_data():
 
     arrival_csv_object = arrival_df.to_csv(index=False)
 
+    # create a response object
+    # ideally we could zip the response 
+    # this works for now but looking into a better way
     response = make_response(arrival_csv_object)
     response.headers.set('Content-Type', 'text/csv')
     response.headers.set('Content-Disposition', 'attachment', filename=f"arrivals_{route_id}_{direction_id}_{date_of_interest.strftime('%Y%m%d')}.csv")
