@@ -32,7 +32,6 @@ const Screens = {
   Dashboard,
   RouteScreen,
   DataDiagnostic,
-  Download,
   NotFound,
 };
 
@@ -106,15 +105,6 @@ const App = props => {
                   </div>
                 }
                 value="ABOUT"
-              />
-              <Tab
-                label={
-                  <div>
-                    <InfoRoundedIcon className="app-tab-icon" />
-                    <span className="app-tab-text"> Download</span>
-                  </div>
-                }
-                value="DOWNLOAD"
               />
             </Tabs>
           </Toolbar>
