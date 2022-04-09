@@ -1,11 +1,13 @@
 import os
 from urllib import response
-from flask import Flask, send_from_directory, Response, send_file, make_response
+from flask import Flask, send_from_directory, Response, send_file, make_response, request
 from flask_cors import CORS
 import json
 from models import schema, config, util, routeconfig, arrival_history, precomputed_stats
 from flask_graphql import GraphQLView
 import datetime
+import pytz
+import pandas as pd
 #import cProfile
 
 """
@@ -52,54 +54,86 @@ def download_arrival_data():
     based on the filters they have selected in the frontend
     '''
 
-    # this data will eventually come from the web app
-    # hard coding for now
-    # right now it's only handling 1 date
-    # in the future, we'll need to handle a date range
-    # coming from the web appp interface
-    agency = config.get_agency('trimet')
-    date_str = '2022-03-10'
-    date_of_interest = datetime.datetime.strptime(date_str,'%Y-%m-%d').date()
-    start_time_str = '00:00:00'
-    end_time_str = '15:00:00'
-    route_id = '4'
-    direction_id = '1'
+    args = request.args
 
-    history = arrival_history.get_by_date(agency_id=agency.id
-                                        , route_id=route_id
-                                        , d=date_of_interest
-                                        , version=arrival_history.DefaultVersion)
-    
-    raw_arrival_df = history.get_data_frame(direction_id=direction_id
-                                            ,start_time=util.get_timestamp_or_none(date_of_interest, start_time_str, agency.tz)
-                                            ,end_time=util.get_timestamp_or_none(date_of_interest, end_time_str, agency.tz)
-                                            )
+    print(f"args.get('variables'): {args.get('variables')}")
+    variables_dict = json.loads(args.get('variables'))
 
-    #raw_arrival_df field names:("VID", "TIME", "DEPARTURE_TIME", "SID", "DID", "DIST", "TRIP")
-    rename_dict = {'TIME':'arrival_time_unix','SID':'stop_id'
-                    ,'DEPARTURE_TIME':'departure_time_unix'
-                    ,'DIST':'distance','TRIP':'trip_id'
-                    ,'DID':'direction_id', 'VID':'vehicle_id'}
+    agency_id = variables_dict.get('agencyId')
+    agency_config = config.get_agency(agency_id)
+    route_id =variables_dict.get('routeId')
+    direction_id = variables_dict.get('directionId', None)
+    starttime = variables_dict.get('startTime', None)
+    endtime = variables_dict.get('endTime', None)
 
-    arrival_df = raw_arrival_df.rename(columns=rename_dict).copy()
+    arrival_df = pd.DataFrame()
+
+    for date_str in variables_dict.get('dates'):
+
+        date_of_interest = datetime.datetime.strptime(date_str,'%Y-%m-%d').date()
+
+        if (starttime is not None and endtime is not None):
+            starttime_param = util.get_timestamp_or_none(date_of_interest, starttime, agency_config.tz)
+            endtime_param = util.get_timestamp_or_none(date_of_interest, endtime, agency_config.tz)
+        else:
+            starttime_param = None
+            endtime_param = None
+
+        history = arrival_history.get_by_date(agency_id=agency_id
+                                            , route_id=route_id
+                                            , d=date_of_interest
+                                            , version=arrival_history.DefaultVersion)
+        
+        raw_arrival_df = history.get_data_frame(direction_id=direction_id
+                                                ,start_time=starttime_param
+                                                ,end_time=endtime_param
+                                                )
+
+        #raw_arrival_df field names:("VID", "TIME", "DEPARTURE_TIME", "SID", "DID", "DIST", "TRIP")
+        rename_dict = {'TIME':'arrival_time_unix','SID':'stop_id'
+                        ,'DEPARTURE_TIME':'departure_time_unix'
+                        ,'DIST':'calc_gps_distance_to_stop','TRIP':'trip_id'
+                        ,'DID':'direction_id', 'VID':'vehicle_id'}
+
+        partial_arrival_df = raw_arrival_df.rename(columns=rename_dict).copy()
+        partial_arrival_df['date'] = date_of_interest.strftime('%Y-%m-%d')
+
+        if arrival_df.empty:
+            arrival_df = partial_arrival_df
+        else:
+            arrival_df = arrival_df.append(partial_arrival_df)
 
     # add fields for user context
     arrival_df['route_id'] = route_id
-    arrival_df['agency'] = agency.id
-    arrival_df['date'] = date_of_interest.strftime('%Y-%m-%d')
+    arrival_df['agency'] = agency_id
+        
 
-    ## convert unix timestamp to datetime string
-    arrival_df['arrival_time'] = arrival_df['arrival_time_unix'].apply(lambda x: datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
-    arrival_df['departure_time'] = arrival_df['departure_time_unix'].apply(lambda x: datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
+    ## convert unix timestamp to datetime then convert to agency timezone then format as string
+    arrival_df['arrival_time'] = arrival_df['arrival_time_unix'].apply(lambda x: pytz.utc.localize(datetime.datetime.fromtimestamp(x)).astimezone(agency_config.tz).strftime('%Y-%m-%d %H:%M:%S'))
+    arrival_df['departure_time'] = arrival_df['departure_time_unix'].apply(lambda x: pytz.utc.localize(datetime.datetime.fromtimestamp(x)).astimezone(agency_config.tz).strftime('%Y-%m-%d %H:%M:%S'))
 
-    arrival_csv_object = arrival_df.to_csv(index=False)
+    # rearrange columns and sort for user convenience
+    arrival_df = arrival_df[['agency','date','route_id'
+                            ,'direction_id','trip_id','vehicle_id'
+                            ,'arrival_time','departure_time','stop_id'
+                            ,'calc_gps_distance_to_stop', 'arrival_time_unix'
+                            ,'departure_time_unix']]
 
-    # create a response object
-    # ideally we could zip the response 
-    # this works for now but looking into a better way
-    response = make_response(arrival_csv_object)
-    response.headers.set('Content-Type', 'text/csv')
-    response.headers.set('Content-Disposition', 'attachment', filename=f"arrivals_{route_id}_{direction_id}_{date_of_interest.strftime('%Y%m%d')}.csv")
+    # I think it would be helpful to sort for users convenience
+    # we can pick other columns to sort by if we want
+    arrival_df_sorted = arrival_df.sort_values(
+                        by=['agency','date','route_id'
+                        ,'direction_id','trip_id','vehicle_id'
+                        ,'arrival_time']).reset_index(drop=True)
+
+    # convert to csv
+    csv_buffer = arrival_df_sorted.to_csv(index=False)
+
+    # create a response
+    # TODO - can we zip this?
+    response = make_response(csv_buffer)
+    response.headers["Content-Disposition"] = "attachment; filename=arrival_data.csv"
+    response.headers["Content-Type"] = "text/csv"
 
     return response
 
