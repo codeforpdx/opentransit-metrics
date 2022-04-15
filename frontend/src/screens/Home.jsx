@@ -68,19 +68,6 @@ function Home(props) {
         </h3>
         <div>Learn about OpenTransit and our mission.</div>
       </div>
-      <div>
-        <h3 style={{ marginBottom: '5px' }}>
-          <Navlink
-            to={{
-              type: 'DOWNLOAD',
-              query: props.query,
-            }}
-          >
-            Download
-          </Navlink>
-        </h3>
-        <div>Download Raw Data for a Route</div>
-      </div>
     </div>
   );
 }
