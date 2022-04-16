@@ -25,6 +25,9 @@ def parse_date(date_str):
     (y,m,d) = date_str.split('-')
     return date(int(y),int(m),int(d))
 
+def parse_unix_timestamp_to_datetime(timestamp, agency_tz):
+    return pytz.utc.localize(datetime.datetime.fromtimestamp(timestamp)).astimezone(agency_tz).strftime('%Y-%m-%d %H:%M:%S')
+
 def get_dates_in_range(start_date, end_date, weekdays=None, max_dates=1000):
 
     if isinstance(start_date, str):

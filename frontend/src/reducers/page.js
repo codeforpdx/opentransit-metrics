@@ -7,7 +7,6 @@ export const components = {
   DASHBOARD: 'Dashboard',
   ROUTESCREEN: 'RouteScreen',
   DATADIAGNOSTIC: 'DataDiagnostic',
-  DOWNLOAD: 'Download',
   [NOT_FOUND]: 'NotFound',
 };
 

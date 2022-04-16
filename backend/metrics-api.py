@@ -63,8 +63,8 @@ def download_arrival_data():
     agency_config = config.get_agency(agency_id)
     route_id =variables_dict.get('routeId')
     direction_id = variables_dict.get('directionId', None)
-    starttime = variables_dict.get('startTime', None)
-    endtime = variables_dict.get('endTime', None)
+    start_time = variables_dict.get('startTime', None)
+    end_time = variables_dict.get('endTime', None)
 
     arrival_df = pd.DataFrame()
 
@@ -72,31 +72,37 @@ def download_arrival_data():
 
         date_of_interest = datetime.datetime.strptime(date_str,'%Y-%m-%d').date()
 
-        if (starttime is not None and endtime is not None):
-            starttime_param = util.get_timestamp_or_none(date_of_interest, starttime, agency_config.tz)
-            endtime_param = util.get_timestamp_or_none(date_of_interest, endtime, agency_config.tz)
+        if (start_time is not None and end_time is not None):
+            start_time_param = util.get_timestamp_or_none(date_of_interest, start_time, agency_config.tz)
+            end_time_param = util.get_timestamp_or_none(date_of_interest, end_time, agency_config.tz)
         else:
-            starttime_param = None
-            endtime_param = None
+            start_time_param = None
+            end_time_param = None
+        try:
+            history = arrival_history.get_by_date(agency_id=agency_id,
+                                                route_id=route_id,
+                                                d=date_of_interest,
+                                                version=arrival_history.DefaultVersion)
+            
+            raw_arrival_df = history.get_data_frame(direction_id=direction_id,
+                                                    start_time=start_time_param,
+                                                    end_time=end_time_param
+                                                    )
 
-        history = arrival_history.get_by_date(agency_id=agency_id
-                                            , route_id=route_id
-                                            , d=date_of_interest
-                                            , version=arrival_history.DefaultVersion)
+            #raw_arrival_df field names:("VID", "TIME", "DEPARTURE_TIME", "SID", "DID", "DIST", "TRIP")
+            rename_dict = {'TIME':'arrival_time_unix',
+                            'SID':'stop_id',
+                            'DEPARTURE_TIME':'departure_time_unix',
+                            'DIST':'calc_gps_distance_to_stop',
+                            'TRIP':'trip_id',
+                            'DID':'direction_id', 
+                            'VID':'vehicle_id'}
+
+            partial_arrival_df = raw_arrival_df.rename(columns=rename_dict).copy()
+            partial_arrival_df['date'] = date_of_interest.strftime('%Y-%m-%d')
         
-        raw_arrival_df = history.get_data_frame(direction_id=direction_id
-                                                ,start_time=starttime_param
-                                                ,end_time=endtime_param
-                                                )
-
-        #raw_arrival_df field names:("VID", "TIME", "DEPARTURE_TIME", "SID", "DID", "DIST", "TRIP")
-        rename_dict = {'TIME':'arrival_time_unix','SID':'stop_id'
-                        ,'DEPARTURE_TIME':'departure_time_unix'
-                        ,'DIST':'calc_gps_distance_to_stop','TRIP':'trip_id'
-                        ,'DID':'direction_id', 'VID':'vehicle_id'}
-
-        partial_arrival_df = raw_arrival_df.rename(columns=rename_dict).copy()
-        partial_arrival_df['date'] = date_of_interest.strftime('%Y-%m-%d')
+        except:
+            partial_arrival_df = pd.DataFrame()
 
         if arrival_df.empty:
             arrival_df = partial_arrival_df
@@ -109,8 +115,8 @@ def download_arrival_data():
         
 
     ## convert unix timestamp to datetime then convert to agency timezone then format as string
-    arrival_df['arrival_time'] = arrival_df['arrival_time_unix'].apply(lambda x: pytz.utc.localize(datetime.datetime.fromtimestamp(x)).astimezone(agency_config.tz).strftime('%Y-%m-%d %H:%M:%S'))
-    arrival_df['departure_time'] = arrival_df['departure_time_unix'].apply(lambda x: pytz.utc.localize(datetime.datetime.fromtimestamp(x)).astimezone(agency_config.tz).strftime('%Y-%m-%d %H:%M:%S'))
+    arrival_df['arrival_time'] = arrival_df['arrival_time_unix'].apply(lambda x: util.parse_unix_timestamp_to_datetime(x, agency_config.tz))
+    arrival_df['departure_time'] = arrival_df['departure_time_unix'].apply(lambda x: util.parse_unix_timestamp_to_datetime(x, agency_config.tz))
 
     # rearrange columns and sort for user convenience
     arrival_df = arrival_df[['agency','date','route_id'

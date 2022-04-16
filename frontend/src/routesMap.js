@@ -141,7 +141,6 @@ export function fullQueryFromParams(params) {
 export default {
   HOME: '/',
   ABOUT: '/about',
-  DOWNLOAD: '/download',
   ISOCHRONE: {
     path: '/isochrone',
     thunk: async (dispatch, getState) => {

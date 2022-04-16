@@ -8,8 +8,6 @@ export default (state = DEFAULT, action = {}) => {
       return `Dashboard | ${DEFAULT}`;
     case 'ABOUT':
       return `About | ${DEFAULT}`;
-    case 'DOWNLOAD':
-        return `Download | ${DEFAULT}`;
     case 'ISOCHRONE':
       return `Isochrone | ${DEFAULT}`;
     case 'ROUTESCREEN':
