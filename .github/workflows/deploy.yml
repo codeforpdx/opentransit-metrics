@@ -19,7 +19,9 @@ jobs:
     - id: check-secret
       name: Check if AWS secret exists
       run: |-
-        if [ ! -z ${{ secrets.AWS_SECRET_ACCESS_KEY }} ]; then
+        if [ ! -z ${{ secrets.AWS_SECRET_ACCESS_KEY }} ] && \
+           [ ! -z ${{ secrets.AWS_ACCESS_KEY_ID }} ] && \
+           [ ! -z ${{ secrets.S3_BUCKET }} ]; then
           echo "::set-output name=key_exists::true"
         fi
 
