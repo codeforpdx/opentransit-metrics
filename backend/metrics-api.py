@@ -104,7 +104,15 @@ def download_arrival_data():
         except:
             partial_arrival_df = pd.DataFrame()
 
-        if arrival_df.empty:
+        if arrival_df.empty & partial_arrival_df.empty:
+            ''' if a date range is requested and there is no data for the first date,
+                we don't want to create an empty
+                arrival_df in case there's another date
+                with data after this one and an empty arrival_df would
+                break the append logic (I think)
+            '''
+            pass
+        elif arrival_df.empty & ~partial_arrival_df.empty:
             arrival_df = partial_arrival_df
         else:
             arrival_df = arrival_df.append(partial_arrival_df)
