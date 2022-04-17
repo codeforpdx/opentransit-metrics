@@ -10,8 +10,25 @@ defaults:
     working-directory: frontend
 
 jobs:
+  check-aws-secret:
+    runs-on: ubuntu-latest
+    outputs:
+      key_exists: ${{ steps.check-secret.outputs.key_exists }}
+    steps:
+    - uses: actions/checkout@v1
+    - id: check-secret
+      name: Check if AWS secret exists
+      run: |-
+        if [ ! -z ${{ secrets.AWS_SECRET_ACCESS_KEY }} ] && \
+           [ ! -z ${{ secrets.AWS_ACCESS_KEY_ID }} ] && \
+           [ ! -z ${{ secrets.S3_BUCKET }} ]; then
+          echo "::set-output name=key_exists::true"
+        fi
+
   run:
     runs-on: ubuntu-latest
+    needs: [check-aws-secret]
+    if: ${{ needs.check-aws-secret.outputs.key_exists == 'true' }}
     steps:
     - uses: actions/checkout@v1
     - name: Configure AWS Credentials
