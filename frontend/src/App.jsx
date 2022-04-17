@@ -19,7 +19,6 @@ import Isochrone from './screens/Isochrone';
 import DataDiagnostic from './screens/DataDiagnostic';
 import RouteScreen from './screens/RouteScreen';
 import Dashboard from './screens/Dashboard';
-import Download from './screens/Download';
 import About from './screens/About';
 import Home from './screens/Home';
 

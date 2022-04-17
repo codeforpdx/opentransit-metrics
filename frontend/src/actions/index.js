@@ -316,15 +316,9 @@ export function fetchRoutes() {
 
 export function fetchDownload(params) {
   const dates = computeDates(params.firstDateRange);
-  console.log('in fetchDownload found dates', dates);
-  console.log('getting dates[0]', dates[0]);
-  const agencyId = params.agencyId;
+  // console.log('in fetchDownload found dates', dates);
+  // console.log('getting dates[0]', dates[0]);
   const routeId = params.routeId ;
-  const directionId = params.directionId ;
-  const startStopId = params.startStopId ;
-  const endStopId = params.endStopId ;
-  const startTime = params.firstDateRange.startTime ;
-  const endTime = params.firstDateRange.endTime;
 
   const variables = {
     agencyId: Agencies[0].id,
@@ -341,13 +335,6 @@ export function fetchDownload(params) {
   const variablesJson = JSON.stringify(variables);
 
   console.log('routeId', routeId);  
-
-  //  I think if there's a second date range, we do not allow download..
-  if (params.secondDateRange) {
-    const dates2 = computeDates(params.secondDateRange);
-    const startTime2 = params.secondDateRange.startTime;
-    const endTime2 = params.secondDateRange.endTime;
-  }
 
   let downloadFilename;
 
