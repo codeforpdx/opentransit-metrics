@@ -207,6 +207,9 @@ class RouteMetrics:
 
                 scheduled_departure_time_values = np.sort(timetable_df['DEPARTURE_TIME'].values)
 
+                if len(departure_time_values) < 2 or len(scheduled_departure_time_values) < 2:
+                    continue
+
                 comparison_df = timetables.match_actual_times_to_schedule(
                     departure_time_values,
                     scheduled_departure_time_values
@@ -233,7 +236,9 @@ class RouteMetrics:
 
             headway_delta_arr.append(self.headway_schedule_deltas[key])
 
-        if len(headway_delta_arr) == 1:
+        if len(headway_delta_arr) == 0:
+            return None
+        elif len(headway_delta_arr) == 1:
             return headway_delta_arr[0]
         else:
             return np.concatenate(headway_delta_arr)
