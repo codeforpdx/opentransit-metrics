@@ -741,7 +741,6 @@ class Isochrone extends React.Component {
 
     return (
       <>
-
         {/* Issue 16: When declared as Leaflet Control, the
             select menus in Isochrone controls don't expand.
             Declare the controls off the map and use CSS to
@@ -750,12 +749,12 @@ class Isochrone extends React.Component {
         <div className="isochrone-controls">
           <FormControl className="inline-form-control">
             <InputLabel shrink>Date-Time Range</InputLabel>
-              <div style={{ paddingTop: '15px' }}>
-                <SingleDateControl />
-              </div>
-              <div>
-                <TimeRangeControl />
-              </div>
+            <div style={{ paddingTop: '15px' }}>
+              <SingleDateControl />
+            </div>
+            <div>
+              <TimeRangeControl />
+            </div>
           </FormControl>
 
           <div>
@@ -763,7 +762,8 @@ class Isochrone extends React.Component {
               <InputLabel shrink>Max Trip Time</InputLabel>
               <Select
                 value={this.state.maxTripMin}
-                onChange={this.handleMaxTripMinChange}>
+                onChange={this.handleMaxTripMinChange}
+              >
                 {tripMins.map(tripMin => (
                   <MenuItem key={tripMin} value={tripMin}>
                     {tripMin} minutes
