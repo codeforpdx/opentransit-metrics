@@ -741,6 +741,58 @@ class Isochrone extends React.Component {
 
     return (
       <>
+
+        {/* Issue 16: When declared as Leaflet Control, the
+            select menus in Isochrone controls don't expand.
+            Declare the controls off the map and use CSS to
+            place them on top of the map.
+          */}
+        <div className="isochrone-controls">
+          <FormControl className="inline-form-control">
+            <InputLabel shrink>Date-Time Range</InputLabel>
+              <div style={{ paddingTop: '15px' }}>
+                <SingleDateControl />
+              </div>
+              <div>
+                <TimeRangeControl />
+              </div>
+          </FormControl>
+
+          <div>
+            <FormControl className="inline-form-control">
+              <InputLabel shrink>Max Trip Time</InputLabel>
+              <Select
+                value={this.state.maxTripMin}
+                onChange={this.handleMaxTripMinChange}>
+                {tripMins.map(tripMin => (
+                  <MenuItem key={tripMin} value={tripMin}>
+                    {tripMin} minutes
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+
+          <div style={{ paddingTop: 8 }}>
+            <InputLabel shrink id="routesLabel">
+              Routes
+            </InputLabel>
+            <Grid container direction="row" alignItems="flex-start">
+              <Grid item>
+                <Button size="small" onClick={this.selectAllRoutesClicked}>
+                  all
+                </Button>
+                <Button size="small" onClick={this.selectNoRoutesClicked}>
+                  none
+                </Button>
+              </Grid>
+            </Grid>
+            <List className="isochrone-routes">
+              {(routes || []).map(route => this.makeRouteToggle(route))}
+            </List>
+          </div>
+        </div>
+
         <Map
           center={this.initialCenter}
           zoom={this.initialZoom}
@@ -757,52 +809,6 @@ class Isochrone extends React.Component {
             opacity={0.6}
           />
           {/* see http://maps.stamen.com for details */}
-          <Control position="topleft" className="isochrone-controls">
-            <div ref={this.refContainer}>
-              <FormControl className="inline-form-control">
-                <InputLabel shrink>Date-Time Range</InputLabel>
-                <div style={{ paddingTop: '15px' }}>
-                  <SingleDateControl />
-                </div>
-                <div>
-                  <TimeRangeControl />
-                </div>
-              </FormControl>
-              <div>
-                <FormControl className="inline-form-control">
-                  <InputLabel shrink>Max Trip Time</InputLabel>
-                  <Select
-                    value={this.state.maxTripMin}
-                    onChange={this.handleMaxTripMinChange}
-                  >
-                    {tripMins.map(tripMin => (
-                      <MenuItem key={tripMin} value={tripMin}>
-                        {tripMin} minutes
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </div>
-              <div style={{ paddingTop: 8 }}>
-                <InputLabel shrink id="routesLabel">
-                  Routes
-                </InputLabel>
-                <Grid container direction="row" alignItems="flex-start">
-                  <Grid item>
-                    <Button size="small" onClick={this.selectAllRoutesClicked}>
-                      all
-                    </Button>
-                    <Button size="small" onClick={this.selectNoRoutesClicked}>
-                      none
-                    </Button>
-                  </Grid>
-                </Grid>
-                <List className="isochrone-routes">
-                  {(routes || []).map(route => this.makeRouteToggle(route))}
-                </List>
-              </div>
-            </div>
-          </Control>
           <Control position="topright">
             {this.state.tripInfo ? (
               <div className="isochrone-trip-info">{this.state.tripInfo}</div>
