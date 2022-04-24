@@ -9,15 +9,12 @@ jobs:
   check-s3-last-modified:
     runs-on: ubuntu-latest
     steps:
-    - id: repo-checkout
-      name: Check out this repo
-      uses: actions/checkout@v2
+    - id: install-aws-cli
+      uses: unfor19/install-aws-cli-action@v1.0.2
       with:
-        fetch-depth: 0
-    - id: install-aws
-      name: Install awscli
-      run: |
-        sh awscli_install.sh
+        version: 2     # default
+        verbose: false # default
+        arch: amd64    # allowed values: amd64, arm64
     - id: aws-creds
       name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -38,7 +35,7 @@ jobs:
         last_collected_in_seconds=$(date -d "${{ steps.get-last-modified-s3.outputs.last_collected_date_output }}" +%s)
         current_date_in_seconds=$(date '+%s')
         minutes_since_last_collected=$(( (current_date_in_seconds-last_collected_in_seconds) / 60 ))
-        if [ $minutes_since_last_collected -gte 5 ]; then
+        if [ $minutes_since_last_collected -gt 5 ]; then
           echo "minutes_since_last_collected $minutes_since_last_collected"
           exit 1
         fi
