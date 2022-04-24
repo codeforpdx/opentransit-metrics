@@ -33,6 +33,6 @@ jobs:
         last_collected_in_seconds=$(date -d "$last_collected_date" +%s)
         current_date_in_seconds=$(date '+%s')
         minutes_since_last_collected=$(( (current_date_in_seconds-last_collected_in_seconds) / 60 ))
-        if [ $minutes_since_last_collected -gte 10 ]; then
+        if [ $minutes_since_last_collected -gte 5 ]; then
           exit 1
         fi
