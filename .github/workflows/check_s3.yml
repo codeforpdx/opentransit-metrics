@@ -1,0 +1,22 @@
+name: Check S3
+
+on:
+  schedule:
+  # every 8 hours, 10 minutes after the hour
+    - cron:  '10 */8 * * *'
+
+jobs:
+  check-aws-secret:
+    runs-on: ubuntu-latest
+    steps:
+    - id: check-s3
+      name: Check if s3 is being updated
+      run: |-
+        aws_bucket_location=$(date +"s3://opentransit-pdx/state/v1/trimet/%Y/%m/%d/")
+        last_collected_date=$(aws s3 ls $aws_bucket_location --recursive | sort | tail -n 1 | awk '{print $1, $2}')
+        last_collected_in_seconds=$(date -d "$last_collected_date" +%s)
+        current_date_in_seconds=$(date '+%s')
+        minutes_since_last_collected=$(( (current_date_in_seconds-last_collected_in_seconds) / 60 ))
+        if [ $minutes_since_last_collected -gte 10 ]; then
+          exit 1
+        fi
