@@ -1,0 +1,42 @@
+name: Check S3
+
+on:
+  schedule:
+  # every 8 hours, 10 minutes after the hour
+    - cron:  '10 */8 * * *'
+
+jobs:
+  check-s3-last-modified:
+    runs-on: ubuntu-latest
+    steps:
+    - id: install-aws-cli
+      uses: unfor19/install-aws-cli-action@v1.0.2
+      with:
+        version: 2     # default
+        verbose: false # default
+        arch: amd64    # allowed values: amd64, arm64
+    - id: aws-creds
+      name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+    - id: get-last-modified-s3
+      name: Check if s3 is being updated
+      run: |-
+        aws_bucket_location=$(date +"s3://opentransit-pdx/state/v1/trimet/%Y/%m/%d/")
+        last_collected_date=$(aws s3 ls $aws_bucket_location --recursive | sort | tail -n 1 | awk '{print $1, $2}')
+        echo "::set-output name=last_collected_date_output::$last_collected_date"
+    - id: compare-times
+      name: Check if s3 is being updated
+      run: |-
+        echo "the last updated datetime is ${{ steps.get-last-modified-s3.outputs.last_collected_date_output }} "
+        last_collected_in_seconds=$(date -d "${{ steps.get-last-modified-s3.outputs.last_collected_date_output }}" +%s)
+        current_date_in_seconds=$(date '+%s')
+        minutes_since_last_collected=$(( (current_date_in_seconds-last_collected_in_seconds) / 60 ))
+        if [ $minutes_since_last_collected -gt 5 ]; then
+          echo "minutes_since_last_collected $minutes_since_last_collected"
+          exit 1
+        fi
+        echo "minutes_since_last_collected $minutes_since_last_collected"
