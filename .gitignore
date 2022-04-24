@@ -1,4 +1,6 @@
 ## CUSTOM GITIGNORE STUFF ##
+# secret storage for act local github action testing
+.secrets
 
 # test notebook
 /backend/models/test.ipynb
