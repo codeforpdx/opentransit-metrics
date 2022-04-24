@@ -6,7 +6,7 @@ on:
     - cron:  '10 */8 * * *'
 
 jobs:
-  check-aws-secret:
+  check-s3-last-modified:
     runs-on: ubuntu-latest
     steps:
     - id: check-s3
