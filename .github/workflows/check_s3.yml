@@ -25,14 +25,21 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-2
-    - id: check-s3
+    - id: get-last-modified-s3
       name: Check if s3 is being updated
       run: |-
         aws_bucket_location=$(date +"s3://opentransit-pdx/state/v1/trimet/%Y/%m/%d/")
         last_collected_date=$(aws s3 ls $aws_bucket_location --recursive | sort | tail -n 1 | awk '{print $1, $2}')
-        last_collected_in_seconds=$(date -d "$last_collected_date" +%s)
+        echo "::set-output name=last_collected_date_output::$last_collected_date"
+    - id: compare-times
+      name: Check if s3 is being updated
+      run: |-
+        echo "the last updated datetime is ${{ steps.get-last-modified-s3.outputs.last_collected_date_output }} "
+        last_collected_in_seconds=$(date -d "${{ steps.get-last-modified-s3.outputs.last_collected_date_output }}" +%s)
         current_date_in_seconds=$(date '+%s')
         minutes_since_last_collected=$(( (current_date_in_seconds-last_collected_in_seconds) / 60 ))
         if [ $minutes_since_last_collected -gte 5 ]; then
+          echo "minutes_since_last_collected $minutes_since_last_collected"
           exit 1
         fi
+        echo "minutes_since_last_collected $minutes_since_last_collected"
