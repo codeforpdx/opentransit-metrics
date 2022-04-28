@@ -3,6 +3,7 @@
 # test notebook
 /backend/models/test.ipynb
 /backend/*.ipynb
+.secrets
 
 # local cache
 backend/data/*.json
