@@ -123,22 +123,22 @@ def download_arrival_data():
         
 
     ## convert unix timestamp to datetime then convert to agency timezone then format as string
-    arrival_df['arrival_time'] = arrival_df['arrival_time_unix'].apply(lambda x: util.parse_unix_timestamp_to_datetime(x, agency_config.tz))
-    arrival_df['departure_time'] = arrival_df['departure_time_unix'].apply(lambda x: util.parse_unix_timestamp_to_datetime(x, agency_config.tz))
+    arrival_df['arrival_time'] = arrival_df['arrival_time_unix'].apply(lambda x: util.unix_timestamp_to_datetime(x, agency_config.tz).strftime('%Y-%m-%d %H:%M:%S'))
+    arrival_df['departure_time'] = arrival_df['departure_time_unix'].apply(lambda x: util.unix_timestamp_to_datetime(x, agency_config.tz).strftime('%Y-%m-%d %H:%M:%S'))
 
     # rearrange columns and sort for user convenience
-    arrival_df = arrival_df[['agency','date','route_id'
-                            ,'direction_id','trip_id','vehicle_id'
-                            ,'arrival_time','departure_time','stop_id'
-                            ,'calc_gps_distance_to_stop', 'arrival_time_unix'
-                            ,'departure_time_unix']]
+    arrival_df = arrival_df[['agency','date','route_id',
+                            'direction_id','trip_id','vehicle_id',
+                            'arrival_time','departure_time','stop_id',
+                            'calc_gps_distance_to_stop', 'arrival_time_unix',
+                            'departure_time_unix']]
 
     # I think it would be helpful to sort for users convenience
     # we can pick other columns to sort by if we want
     arrival_df_sorted = arrival_df.sort_values(
-                        by=['agency','date','route_id'
-                        ,'direction_id','trip_id','vehicle_id'
-                        ,'arrival_time']).reset_index(drop=True)
+                        by=['agency','date','route_id',
+                        'direction_id','trip_id','vehicle_id',
+                        'arrival_time']).reset_index(drop=True)
 
     # convert to csv
     csv_buffer = arrival_df_sorted.to_csv(index=False)
