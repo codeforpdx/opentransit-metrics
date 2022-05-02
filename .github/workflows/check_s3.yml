@@ -49,5 +49,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: "#ffa500"
-        SLACK_MESSAGE: "No new data in the S3 bucket since: ${{ steps.get-last-modified-s3.last_collected_date_output }}"
+        SLACK_MESSAGE: "No new data in the S3 bucket since: ${{ steps.get-last-modified-s3.outputs.last_collected_date_output }}"
         SLACK_WEBHOOK: ${{ secrets.OPENTRANSIT_SLACK_WEBHOOK }}
+        SLACK_USERNAME: "S3 Check GitHub Action"
+        SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
