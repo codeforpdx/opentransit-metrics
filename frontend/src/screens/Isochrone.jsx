@@ -134,6 +134,7 @@ class Isochrone extends React.Component {
     this.tripLayers = [];
     this.routeLayers = [];
     this.mapRef = React.createRef();
+    this.geoJson = {}
 
     this.handleMapClick = this.handleMapClick.bind(this);
     this.handleToggleRoute = this.handleToggleRoute.bind(this);
@@ -144,6 +145,7 @@ class Isochrone extends React.Component {
     this.onWorkerMessage = this.onWorkerMessage.bind(this);
     this.recomputeIsochrones = this.recomputeIsochrones.bind(this);
     this.maxTripMinChanged = this.maxTripMinChanged.bind(this);
+    this.downloadGeoJSON = this.downloadGeoJSON.bind(this);
 
     isochroneWorker.onmessage = this.onWorkerMessage;
 
@@ -295,7 +297,7 @@ class Isochrone extends React.Component {
   addReachableLocationsLayer(data) {
     const tripMin = data.tripMin;
     const reachableCircles = data.circles;
-    const geoJson = data.geoJson;
+    this.geoJson = data.geoJson;
 
     if (this.state.computeId !== data.computeId || !this.mapRef.current) {
       return;
@@ -308,7 +310,7 @@ class Isochrone extends React.Component {
     const layerOptions = tripMinOptions[`${tripMin}`] || defaultLayerOptions;
 
     const diffLayer = L.geoJson(
-      geoJson,
+      this.geoJson,
       Object.assign(
         { bubblingMouseEvents: false, fillOpacity: 0.4, stroke: false },
         layerOptions,
@@ -704,6 +706,19 @@ class Isochrone extends React.Component {
     );
   }
 
+  downloadGeoJSON() {
+    if (this.geoJson) {
+      const blob = new Blob([JSON.stringify(this.geoJson)],{type:'application/json'});
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = "geojson-export-" + this.props.date + ".json";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
   render() {
     const { routes } = this.props;
 
@@ -838,6 +853,14 @@ class Isochrone extends React.Component {
               </Button>
               <br />
               <br />
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={this.downloadGeoJSON}
+              >
+                Download As GeoJSON
+              </Button>
             </Control>
           ) : null}
         </Map>
