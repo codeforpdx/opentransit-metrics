@@ -134,7 +134,7 @@ class Isochrone extends React.Component {
     this.tripLayers = [];
     this.routeLayers = [];
     this.mapRef = React.createRef();
-    this.geoJson = {}
+    this.geoJson = {};
 
     this.handleMapClick = this.handleMapClick.bind(this);
     this.handleToggleRoute = this.handleToggleRoute.bind(this);
