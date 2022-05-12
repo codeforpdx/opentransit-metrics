@@ -72,6 +72,9 @@ const redIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+// define the beginning of the master list for all geoJson shapes
+let allGeoShapes = JSON.parse('{"type":"Feature","geometry":{"type":"MultiPolygon","coordinates":[]}}');
+
 const computeCache = {};
 
 function getDirectionInfo(directionId, routeInfo) {
@@ -298,6 +301,10 @@ class Isochrone extends React.Component {
     const tripMin = data.tripMin;
     const reachableCircles = data.circles;
     this.geoJson = data.geoJson;
+
+    // add the coordinates from the current shape to the global list
+    let coords = this.geoJson.geometry.coordinates
+    coords.forEach(coord => allGeoShapes.geometry.coordinates.push(coord))
 
     if (this.state.computeId !== data.computeId || !this.mapRef.current) {
       return;
@@ -707,8 +714,8 @@ class Isochrone extends React.Component {
   }
 
   downloadGeoJSON() {
-    if (this.geoJson) {
-      const blob = new Blob([JSON.stringify(this.geoJson)],{type:'application/json'});
+    if (allGeoShapes) {
+      const blob = new Blob([JSON.stringify(allGeoShapes)],{type:'application/json'});
       const href = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = href;
