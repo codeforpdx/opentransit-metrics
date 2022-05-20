@@ -76,6 +76,11 @@ if __name__ == '__main__':
 
             date_str = str(d)
 
+            #hardcode first complete date for now
+            #there's no way to "backfill" data because we're
+            #grabbing data from the API
+            state['first_complete_date'] = "2022-02-15"
+
             if d < today and ('last_complete_date' not in state or date_str > state['last_complete_date']):
                 state['last_complete_date'] = date_str
                 save_state(state)
