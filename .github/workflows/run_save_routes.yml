@@ -1,0 +1,37 @@
+name: Run Save Routes
+
+on:
+  workflow_dispatch:
+  schedule:
+  # every Monday at 7 UTC 
+    - cron:  '0 7 * * 1'
+
+env:
+  aws-region: us-west-2
+  OPENTRANSIT_S3_BUCKET: opentransit-pdx
+  OPENTRANSIT_AGENCY_IDS: trimet
+
+jobs:
+  run-save-routes:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+    - name: Configure Python with pip cache
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.7.x'
+        cache: 'pip'
+    - name: Install dependencies
+      working-directory: backend
+      run: |
+        pip install -r requirements.txt
+    - name: Run compute new
+      working-directory: backend
+      run: |
+        python save_routes.py --s3 --timetables --scheduled-stats --agency=trimet
