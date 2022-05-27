@@ -20,7 +20,7 @@ jobs:
     - name: Configure Python with pip cache
       uses: actions/setup-python@v2
       with:
-        python-version: '3.7.2'
+        python-version: '3.7.x'
         cache: 'pip'
     - name: Install dependencies
       working-directory: backend
