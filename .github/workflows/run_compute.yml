@@ -30,4 +30,6 @@ jobs:
         pip install -r requirements.txt
     - name: Run compute new
       working-directory: backend
-      run: python compute_new.py
+      run: |
+        dd=$(date --date='yesterday' +'%Y-%m-%d')
+        python compute_new.py --agency=trimet --start-date=$dd
