@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
   # every day 9 UTC
-    - cron:  '0 9 1 1 *'
+    - cron:  '0 9 * * *'
 
 env:
   aws-region: us-west-2
