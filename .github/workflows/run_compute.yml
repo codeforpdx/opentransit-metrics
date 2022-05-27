@@ -6,6 +6,11 @@ on:
   # every day 9 UTC
     - cron:  '0 9 1 1 *'
 
+env:
+  aws-region: us-west-2
+  OPENTRANSIT_S3_BUCKET: opentransit-pdx
+  OPENTRANSIT_AGENCY_IDS: trimet
+
 jobs:
   run-compute:
     runs-on: ubuntu-latest
@@ -22,9 +27,6 @@ jobs:
       with:
         python-version: '3.7.x'
         cache: 'pip'
-        aws-region: us-west-2
-        OPENTRANSIT_S3_BUCKET: opentransit-pdx
-        OPENTRANSIT_AGENCY_IDS: trimet
     - name: Install dependencies
       working-directory: backend
       run: |
