@@ -1,9 +1,9 @@
 ## CUSTOM GITIGNORE STUFF ##
-
+.secrets
+backend/*.ipynb
 # test notebook
 /backend/models/test.ipynb
 /backend/*.ipynb
-.secrets
 
 # local cache
 backend/data/*.json
