@@ -35,4 +35,4 @@ jobs:
       working-directory: backend
       run: |
         dd=$(date --date='yesterday' +'%Y-%m-%d')
-        python compute_new.py --agency=trimet --start-date=$dd
+        python compute_new.py --agency=trimet
