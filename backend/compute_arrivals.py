@@ -3,6 +3,7 @@ import argparse
 from datetime import datetime, date, timedelta
 import time
 
+
 def compute_arrivals_for_date_and_start_hour(d: date, start_hour: int,
                 agency: config.Agency, route_ids: list,
                 save_to_s3=True):

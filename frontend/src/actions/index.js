@@ -314,10 +314,66 @@ export function fetchRoutes() {
   };
 }
 
+export function fetchDownload(params) {
+  const dates = computeDates(params.firstDateRange);
+  // console.log('in fetchDownload found dates', dates);
+  // console.log('getting dates[0]', dates[0]);
+  const routeId = params.routeId ;
+
+  const variables = {
+    agencyId: Agencies[0].id,
+    routeId: params.routeId,
+    dates,
+    directionId: params.directionId,
+    startStopId: params.startStopId,
+    endStopId: params.endStopId,
+    startTime: params.firstDateRange.startTime,
+    endTime: params.firstDateRange.endTime,
+    dualDateRange: !!params.secondDateRange,
+  };
+
+  const variablesJson = JSON.stringify(variables);
+
+  console.log('routeId', routeId);  
+
+  let downloadFilename;
+
+  if (dates.length === 1) {
+    downloadFilename = `arrivals_${routeId}_${dates[0]}.csv`;
+  } else {
+    // when we don't have all params, clear graph data
+    downloadFilename = `arrivals_${routeId}_${dates[0]}_${dates[1]}.csv`;
+  }
+
+
+    console.log('inside fetchDownload action routeId', params.routeId
+    , 'directionId', params.directionId, 'dates', dates);
+
+    axios.get(
+      '/api/arrival_download', 
+      {responseType: 'blob',
+      params: { variables: variablesJson },
+      baseURL: MetricsBaseURL,
+    } 
+    ).then((response) => {
+      // copied from https://stackoverflow.com/questions/65212805/how-can-i-open-csv-file-received-from-axios-get-response-in-new-window
+      // there might be a better way to download the file
+      var url = window.URL.createObjectURL(response.data)
+      var a = document.createElement('a')
+      a.href = url
+      a.download = downloadFilename
+      a.click()
+      a.remove()
+      setTimeout(() => window.URL.revokeObjectURL(url), 100)
+    });
+    
+  };
+
 export function fetchRouteMetrics(params) {
   const dates = computeDates(params.firstDateRange);
 
   return function(dispatch, getState) {
+    console.log('fetchRouteMetrics', params);
     const query = `
 fragment intervalFields on RouteIntervalMetrics {
   directions {
@@ -543,6 +599,7 @@ export function handleGraphParams(params) {
   return function(dispatch, getState) {
     const oldParams = getState().graphParams;
     dispatch({ type: 'RECEIVED_GRAPH_PARAMS', params });
+    console.log('RECEIVED_GRAPH_PARAMS', params);
     const graphParams = getState().graphParams;
 
     if (
