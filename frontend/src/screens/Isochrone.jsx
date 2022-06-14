@@ -73,7 +73,7 @@ const redIcon = new L.Icon({
 });
 
 // define the beginning of the master list for all geoJson shapes
-let allGeoShapes = JSON.parse('{"type":"FeatureCollection","features":[]}');
+const allGeoShapes = JSON.parse('{"type":"FeatureCollection","features":[]}');
 
 const computeCache = {};
 
@@ -301,10 +301,10 @@ class Isochrone extends React.Component {
     const tripMin = data.tripMin;
     const reachableCircles = data.circles;
     this.geoJson = data.geoJson;
-    this.geoJson.properties.time = tripMin // add a property so that each shape can be separated in geoJSON renderers
+    this.geoJson.properties.time = tripMin; // add a property so that each shape can be separated in geoJSON renderers
 
     // add the coordinates from the current shape to the global list
-    allGeoShapes.features.push(this.geoJson)
+    allGeoShapes.features.push(this.geoJson);
 
     if (this.state.computeId !== data.computeId || !this.mapRef.current) {
       return;
