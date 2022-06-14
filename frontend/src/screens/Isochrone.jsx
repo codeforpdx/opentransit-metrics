@@ -301,6 +301,7 @@ class Isochrone extends React.Component {
     const tripMin = data.tripMin;
     const reachableCircles = data.circles;
     this.geoJson = data.geoJson;
+    this.geoJson.properties.time = tripMin // add a property so that each shape can be separated in geoJSON renderers
 
     // add the coordinates from the current shape to the global list
     allGeoShapes.features.push(this.geoJson)
