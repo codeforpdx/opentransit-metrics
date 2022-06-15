@@ -629,6 +629,7 @@ class Isochrone extends React.Component {
   resetMapClicked() {
     // event arg
     this.resetMap();
+    this.geoJson = {};
   }
 
   recomputeIsochrones() {
@@ -858,18 +859,20 @@ class Isochrone extends React.Component {
               >
                 Clear map
               </Button>
-              <br />
-              <br />
-              <Button
+            </Control>
+          ) : null}
+          <Control position="bottomleft">
+            {!this.state.computing && this.layers.length !== 0 ? (
+            <Button
                 variant="contained"
                 color="primary"
                 size="small"
                 onClick={this.downloadGeoJSON}
               >
                 Download As GeoJSON
-              </Button>
-            </Control>
+            </Button>
           ) : null}
+          </Control>
         </Map>
       </>
     );
