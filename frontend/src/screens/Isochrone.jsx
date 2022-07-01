@@ -72,9 +72,6 @@ const redIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
-// define the beginning of the master list for all geoJson shapes
-const allGeoShapes = JSON.parse('{"type":"FeatureCollection","features":[]}');
-
 const computeCache = {};
 
 function getDirectionInfo(directionId, routeInfo) {
@@ -138,6 +135,8 @@ class Isochrone extends React.Component {
     this.routeLayers = [];
     this.mapRef = React.createRef();
     this.geoJson = {};
+    // define the beginning of the master list for all geoJson shapes
+    this.allGeoShapes = this.defaultMasterListValue();
 
     this.handleMapClick = this.handleMapClick.bind(this);
     this.handleToggleRoute = this.handleToggleRoute.bind(this);
@@ -301,10 +300,12 @@ class Isochrone extends React.Component {
     const tripMin = data.tripMin;
     const reachableCircles = data.circles;
     this.geoJson = data.geoJson;
-    this.geoJson.properties.time = tripMin; // add a property so that each shape can be separated in geoJSON renderers
 
+    if (this.geoJson) {
+      this.geoJson.properties.time = tripMin; // add a property so that each shape can be separated in geoJSON renderers
+    }
     // add the coordinates from the current shape to the global list
-    allGeoShapes.features.push(this.geoJson);
+    this.allGeoShapes.features.push(this.geoJson);
 
     if (this.state.computeId !== data.computeId || !this.mapRef.current) {
       return;
@@ -630,6 +631,11 @@ class Isochrone extends React.Component {
     // event arg
     this.resetMap();
     this.geoJson = {};
+    this.allGeoShapes = this.defaultMasterListValue(); // clear the master list of geoshapes when the map is cleared
+  }
+
+  defaultMasterListValue() {
+    return JSON.parse('{"type":"FeatureCollection","features":[]}');
   }
 
   recomputeIsochrones() {
@@ -715,8 +721,8 @@ class Isochrone extends React.Component {
   }
 
   downloadGeoJSON() {
-    if (allGeoShapes) {
-      const blob = new Blob([JSON.stringify(allGeoShapes)],{type:'application/json'});
+    if (this.allGeoShapes) {
+      const blob = new Blob([JSON.stringify(this.allGeoShapes)],{type:'application/json'});
       const href = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = href;
