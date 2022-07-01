@@ -722,11 +722,13 @@ class Isochrone extends React.Component {
 
   downloadGeoJSON() {
     if (this.allGeoShapes) {
-      const blob = new Blob([JSON.stringify(this.allGeoShapes)],{type:'application/json'});
+      const blob = new Blob([JSON.stringify(this.allGeoShapes)], {
+        type: 'application/json',
+      });
       const href = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = href;
-      link.download = "geojson-export-" + this.props.date + ".json";
+      link.download = `geojson-export-${this.props.date}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -869,15 +871,15 @@ class Isochrone extends React.Component {
           ) : null}
           <Control position="bottomleft">
             {!this.state.computing && this.layers.length !== 0 ? (
-            <Button
+              <Button
                 variant="contained"
                 color="primary"
                 size="small"
                 onClick={this.downloadGeoJSON}
               >
                 Download As GeoJSON
-            </Button>
-          ) : null}
+              </Button>
+            ) : null}
           </Control>
         </Map>
       </>
