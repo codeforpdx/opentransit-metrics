@@ -134,6 +134,9 @@ class Isochrone extends React.Component {
     this.tripLayers = [];
     this.routeLayers = [];
     this.mapRef = React.createRef();
+    this.geoJson = {};
+    // define the beginning of the master list for all geoJson shapes
+    this.allGeoShapes = this.defaultMasterListValue();
 
     this.handleMapClick = this.handleMapClick.bind(this);
     this.handleToggleRoute = this.handleToggleRoute.bind(this);
@@ -144,6 +147,7 @@ class Isochrone extends React.Component {
     this.onWorkerMessage = this.onWorkerMessage.bind(this);
     this.recomputeIsochrones = this.recomputeIsochrones.bind(this);
     this.maxTripMinChanged = this.maxTripMinChanged.bind(this);
+    this.downloadGeoJSON = this.downloadGeoJSON.bind(this);
 
     isochroneWorker.onmessage = this.onWorkerMessage;
 
@@ -295,7 +299,13 @@ class Isochrone extends React.Component {
   addReachableLocationsLayer(data) {
     const tripMin = data.tripMin;
     const reachableCircles = data.circles;
-    const geoJson = data.geoJson;
+    this.geoJson = data.geoJson;
+
+    if (this.geoJson) {
+      this.geoJson.properties.time = tripMin; // add a property so that each shape can be separated in geoJSON renderers
+    }
+    // add the coordinates from the current shape to the global list
+    this.allGeoShapes.features.push(this.geoJson);
 
     if (this.state.computeId !== data.computeId || !this.mapRef.current) {
       return;
@@ -308,7 +318,7 @@ class Isochrone extends React.Component {
     const layerOptions = tripMinOptions[`${tripMin}`] || defaultLayerOptions;
 
     const diffLayer = L.geoJson(
-      geoJson,
+      this.geoJson,
       Object.assign(
         { bubblingMouseEvents: false, fillOpacity: 0.4, stroke: false },
         layerOptions,
@@ -620,6 +630,12 @@ class Isochrone extends React.Component {
   resetMapClicked() {
     // event arg
     this.resetMap();
+    this.geoJson = {};
+    this.allGeoShapes = this.defaultMasterListValue(); // clear the master list of geoshapes when the map is cleared
+  }
+
+  defaultMasterListValue() {
+    return JSON.parse('{"type":"FeatureCollection","features":[]}');
   }
 
   recomputeIsochrones() {
@@ -702,6 +718,21 @@ class Isochrone extends React.Component {
         />
       </ListItem>
     );
+  }
+
+  downloadGeoJSON() {
+    if (this.allGeoShapes) {
+      const blob = new Blob([JSON.stringify(this.allGeoShapes)], {
+        type: 'application/json',
+      });
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = `geojson-export-${this.props.date}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   }
 
   render() {
@@ -842,10 +873,20 @@ class Isochrone extends React.Component {
               >
                 Clear map
               </Button>
-              <br />
-              <br />
             </Control>
           ) : null}
+          <Control position="bottomleft">
+            {!this.state.computing && this.layers.length !== 0 ? (
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={this.downloadGeoJSON}
+              >
+                Download As GeoJSON
+              </Button>
+            ) : null}
+          </Control>
         </Map>
       </>
     );

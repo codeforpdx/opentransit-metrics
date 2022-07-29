@@ -5,6 +5,8 @@ import SummaryRow from './SummaryRow';
 import SummaryHeaderRow from './SummaryHeaderRow';
 import { metersToMiles } from '../helpers/routeCalculations';
 import { renderDateRange } from '../helpers/dateTime';
+import Button from '@material-ui/core/Button';
+import { fetchDownload } from '../actions/index';
 
 /*
  * Renders the Summary tab on the RouteScreen when a route and optional direction are selected,
@@ -43,6 +45,14 @@ function RouteSummary(props) {
   } else {
     intervalMetrics = routeIntervalMetrics;
     intervalMetrics2 = routeIntervalMetrics2;
+  }
+
+
+  function handleDownload() {
+    // setDateRangeParams(localDateRangeParams);
+    // setAnchorEl(null);
+    fetchDownload(graphParams);
+    console.log('Download button clicked');
   }
 
   let columns;
@@ -196,12 +206,21 @@ function RouteSummary(props) {
                     columns={columns}
                     scheduled={dirInfo ? dirInfo.stops.length : null}
                   />
+                  {/* add button here */}
                 </>
               ) : null}
             </>
           ) : null}
         </TableBody>
       </Table>
+      <Button
+      onClick={handleDownload}
+      color="primary"
+      variant="contained"
+      // disabled={}
+      >
+      Download Arrival Data
+      </Button>
     </>
   );
 }
