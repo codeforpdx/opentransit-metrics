@@ -34,6 +34,8 @@ Build and run the Docker containers -- run this on your local terminal from the 
 docker-compose up
 ```
 
+**Mac M1 users see 'Notes for Developers' below.**
+
 This will run the React frontend in development mode at http://localhost:3000,
 and the Flask backend in development mode at http://localhost:5000.
 
@@ -156,6 +158,18 @@ services:
 
 This setting is not in the main docker-compose.yml file because CHOKIDAR_USEPOLLING causes high CPU/battery usage for developers using Mac OS X,
 and CHOKIDAR_USEPOLLING is not necessary on Mac OS X to automatically recompile the frontend code when it changes.
+
+### Mac M1 
+If you're developing within Docker on a Mac with an M1 chip, you need to change the docker-compose platform. Create a `docker-compose.override.yml` to enable specify the platform like this:
+
+```yml
+version: "3.7"
+services:
+  flask-dev:
+    platform: linux/amd64
+  react-dev:
+    platform: linux/amd64
+```
 
 ### Configuring the displayed transit agency
 
