@@ -65,6 +65,14 @@ export function generateArrivalsURL(agencyId, dateStr, routeId) {
 }
 
 /**
+ * Generate S3 URL for fetching range of valid data.
+ * @param {*} agencyId
+ */
+export function generateDataRangeURL(agencyId) {
+  return `https://opentransit-pdx.s3.us-west-2.amazonaws.com/metrics-state/v1/metrics-state_v1_${agencyId}.json`;
+}
+
+/**
  * The functions below here are Redux "thunks" (see https://github.com/reduxjs/redux-thunk),
  * a kind of Redux action that can do asynchronous processing.
  */
@@ -521,6 +529,38 @@ export function fetchArrivals(params) {
           dispatch({ type: 'ERROR_ARRIVALS', error: 'No data.' });
         });
     }
+  };
+}
+
+/**
+ * Action creator that fetches range of valid data from S3
+ * for the agency specified by params.
+ *
+ * @returns JSON w/"last_complete_date", "first_complete_date",
+ *          and "last_partial_data_time" keys
+ */
+export function fetchDataRange() {
+  return function(dispatch) {
+    const agencyId = Agencies[0].id;
+    const s3Url = generateDataRangeURL(agencyId);
+    dispatch({ type: 'REQUEST_DATA_RANGE', agencyId });
+    axios
+      .get(s3Url)
+      .then(response => {
+        const dataRange = response.data;
+        dispatch({
+          type: 'RECEIVED_DATA_RANGE',
+          data: dataRange,
+          agencyId,
+          url: s3Url,
+        });
+      })
+      .catch(err => {
+        dispatch({
+          type: 'ERROR_DATA_RANGE',
+          error: err,
+        });
+      });
   };
 }
 

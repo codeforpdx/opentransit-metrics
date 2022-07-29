@@ -5,20 +5,28 @@ import { connect } from 'react-redux';
 import MapSpider from '../components/MapSpider';
 import RouteTable from '../components/RouteTable';
 
-import { fetchRoutes, handleGraphParams } from '../actions';
+import { fetchRoutes, handleGraphParams, fetchDataRange } from '../actions';
 
 function Dashboard(props) {
   const { routes } = props;
   const myFetchRoutes = props.fetchRoutes;
   const myHandleGraphParams = props.handleGraphParams;
+  const dataRange = props.dataRange;
+  const myFetchDataRange = props.fetchDataRange;
 
+  // Like componentDidMount, this runs only on first render.
   useEffect(() => {
     if (!routes) {
       myFetchRoutes();
     }
+
+    if (!dataRange) {
+      myFetchDataRange();
+    }
+
     // trigger action to fetch precomputed stats for initial graphParams
     myHandleGraphParams({});
-  }, [routes, myFetchRoutes, myHandleGraphParams]); // like componentDidMount, this runs only on first render
+  }, [routes, myFetchRoutes, myHandleGraphParams, dataRange, myFetchDataRange]);
 
   return (
     <Grid container spacing={0}>
@@ -35,13 +43,17 @@ function Dashboard(props) {
   );
 }
 
-const mapStateToProps = state => ({
-  routes: state.routes.data,
-});
+const mapStateToProps = state => {
+  return {
+    routes: state.routes.data,
+    dataRange: state.dataRange.data,
+  };
+};
 
 const mapDispatchToProps = dispatch => ({
   fetchRoutes: params => dispatch(fetchRoutes(params)),
   handleGraphParams: params => dispatch(handleGraphParams(params)),
+  fetchDataRange: params => dispatch(fetchDataRange(params)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);

@@ -260,3 +260,40 @@ export function routeMetrics(state = initialRouteMetrics, action) {
       return state;
   }
 }
+
+/** Initial dataRange state.
+ */
+const initialDataRange = {
+  data: null,
+  agencyId: null,
+  url: null,
+  error: null,
+};
+
+/** Responds to actions created in fetchDataRange().
+ */
+export function dataRange(state = initialDataRange, action) {
+  switch (action.type) {
+    case 'REQUEST_DATA_RANGE':
+      return {
+        ...state,
+        agencyId: action.agencyId,
+      };
+    case 'RECEIVED_DATA_RANGE':
+      return {
+        ...state,
+        data: action.data,
+        agencyId: action.agencyId,
+        url: action.url,
+        error: null,
+      };
+    case 'ERROR_DATA_RANGE':
+      return {
+        ...state,
+        data: null,
+        error: action.error,
+      };
+    default:
+      return state;
+  }
+}
