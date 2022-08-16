@@ -38,18 +38,17 @@ jobs:
         minutes_since_last_collected=$(( (current_date_in_seconds-last_collected_in_seconds) / 60 ))
         if [ $minutes_since_last_collected -gt 5 ]; then
           echo "minutes_since_last_collected $minutes_since_last_collected"
-          echo "::set-output name=missing-data::true"
           exit 1
         fi
         echo "minutes_since_last_collected $minutes_since_last_collected"
 
     - id: slack-notification-on-failure
-      if: steps.compare-times.outputs.missing-data == 'true'
+      if: ${{ failure() }} 
       name: Slack Notification (S3 check found missing data)
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: "#ffa500"
-        SLACK_MESSAGE: "No new data in the S3 bucket since: ${{ steps.get-last-modified-s3.outputs.last_collected_date_output }}. Check process running https://github.com/codeforpdx/opentransit-collector."
+        SLACK_MESSAGE: "The Check S3 action has failed. No new data in the S3 bucket since: ${{ steps.get-last-modified-s3.outputs.last_collected_date_output }}. Check process running https://github.com/codeforpdx/opentransit-collector."
         SLACK_WEBHOOK: ${{ secrets.OPENTRANSIT_SLACK_WEBHOOK }}
         SLACK_USERNAME: "S3 Check GitHub Action"
         SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
