@@ -28,11 +28,11 @@ OpenTransit is dedicated to empowering people around the world to work with loca
 
 - Good people to ask for reviews:
   - Data science -- youngj, benji
-  - Frontend -- ?
+  - Frontend -- Curtis Barnard
   - Backend -- youngj, benji
   - Code refactoring -- ?
   - Deployment -- youngj
-  - UI/UX -- ?
+  - UI/UX -- Curtis Barnard
 - When in doubt, ask more people for reviews!
 - Include screenshots whenever you’re building a frontend feature.
 
