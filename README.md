@@ -192,6 +192,20 @@ services:
 
 After changing docker-compose.override.yml, you will need to re-run `docker-compose up` for the changes to take effect.
 
+### Debugging in VS Code
+
+#### Debugging the Flask app
+
+For developers using the VS Code editor, there is configuration that supports debugging Python code. To debug the Flask app, the `docker-compose.debug.yml` compose file is configured to listen on port `6789` before starting the app, while the debugger is attached via the "Python: Attach" configuration defined in [`.vscode/launch.json`](.vscode/launch.json). To debug using this configuration, run `docker compose -f docker-compose.debug.yml up` (add the `--build` option if the containers need to be built). Open the "Run and Debug" panel in the VS Code sidebar, then select and run the "Python: Attach" launch configuration.
+
+> **NOTE**: If running on a Mac with an ARM CPU (for example, an M1 or M2 processor), the `docker-compose.override.yml` file will need to be included as an additional file option: `docker compose -f docker-compose.debug.yml -f docker-compose.override.yml up`. See [this article](https://pythonspeed.com/articles/docker-build-problems-mac/) for more details.
+
+#### Debugging Python command line scripts
+
+To debug code that is not run as part of the Flask app, for example one of the command line scripts, the `flask-dev` Docker image can be built and run using configuration in [`.vscode/tasks.json`](.vscode/tasks.json). Configuration exists for running the `save_routes.py` script, and this can be expanded over time to allow for debugging additional scripts.
+
+To run the debug configuration for this script, open the "Run and Debug" panel in the VS Code sidebar, then select and run the "Docker: flask-dev - save_routes.py" launch configuration. When prompted, select the `--platform linux/amd64` option if running on a Mac with an ARM CPU (see note in previous section), or the default value for any other platform.
+
 ### Advanced Concepts
 
 Please see [ADVANCED_DEV.md](docs/ADVANCED_DEV.md) for even more advanced information like computing arrival times and deploying to AWS.
