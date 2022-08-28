@@ -19,6 +19,21 @@
         }
       ],
 
+    },
+    {
+      "name": "Docker: flask-dev - save_routes.py",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: save_routes.py",
+      "python": {
+        "pathMappings": [
+          {
+            "localRoot": "${workspaceFolder}/backend",
+            "remoteRoot": "/app/backend"
+          }
+        ],
+        "projectType": "general"
+      }
     }
   ]
 }

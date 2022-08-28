@@ -1,0 +1,41 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+    {
+      "type": "docker-build",
+      "label": "docker-build",
+      "platform": "python",
+      "dockerBuild": {
+        "tag": "opentransitmetrics:flask-dev",
+        "dockerfile": "${workspaceFolder}/Dockerfile",
+        "context": "${workspaceFolder}",
+        "pull": true,
+        "target": "flask-dev",
+        "customOptions": "${input:dockerBuildm1}",
+      }
+    },
+    {
+      "type": "docker-run",
+      "label": "docker-run: save_routes.py",
+      "dependsOn": [
+        "docker-build"
+      ],
+      "python": {
+        "args": ["--s3", "--timetables", "--scheduled-stats", "--agency=trimet"],
+        "file": "save_routes.py"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "dockerBuildm1",
+      "type": "pickString",
+      "description": "Select '--platform linux/amd64' to build for Macs with an ARM CPU",
+      "default": "",
+      "options": [
+        "--platform linux/amd64",
+        ""
+      ]
+    }
+  ]
+}
