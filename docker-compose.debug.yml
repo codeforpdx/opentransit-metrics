@@ -1,0 +1,42 @@
+#
+# docker-compose file configured for debugging the flask app.
+# Should be used in conjunction with a vs code launch configuration
+# for attaching a debugger to the flask process (see the
+# `Python: Attach` config in launch.json). This allows the addition
+# of breakpoints to the flask app's python code from vs code.
+#
+version: "3.7"
+services:
+  flask-dev:
+    container_name: metrics-flask-dev
+    build:
+      dockerfile: Dockerfile
+      target: flask-dev
+      context: .
+    command: ["sh", "-c", "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:6789 -m flask run --no-debugger --no-reload --host 0.0.0.0 --port 5000"]
+    ports:
+      - 5000:5000
+      - 6789:6789
+    volumes:
+      - ./backend:/app/backend
+    environment:
+      FLASK_DEBUG: 1
+      OPENTRANSIT_S3_BUCKET: opentransit-pdx
+      OPENTRANSIT_AGENCY_IDS: trimet
+  react-dev:
+    container_name: metrics-react-dev
+    image: opentransit-metrics-react-dev:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: react-dev
+    volumes:
+      - ./frontend/build:/app/frontend/build
+      - ./frontend/public:/app/frontend/public
+      - ./frontend/src:/app/frontend/src
+    ports:
+      - 3000:3000
+    environment:
+      NODE_ENV: development
+      REACT_APP_METRICS_BASE_URL: http://localhost:5000
+    tty: true
