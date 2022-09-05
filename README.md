@@ -53,6 +53,7 @@ If you need to install some new dependencies in the Docker images, you can rebui
 | Error message | Solution |
 | --- | --- |
 | `Module not found: can't resolve ...` | Run `docker-compose build` |
+| `Failed to execute script docker-compose` | Open Docker Desktop app first |
 
 ## Your first pull request
 
@@ -140,6 +141,38 @@ popular React framework and looks great on mobile.
 
 If you ever need to use a new pip library, make sure you run `pip freeze > requirements.txt`
 so other contributors have the latest versions of required packages.
+
+### Running JupyterLab on Docker
+
+0. Prerequisite - make sure you can run `docker-compose up` and navigate to `localhost:3000/` before making any of the below changes.
+1. Add port 9999:9999 binding to your `docker-compose.override.yml` file (create this file if you don't have one). Your file should look something like:
+```
+version: "3.7"
+services:
+  flask-dev:
+    ports:
+      - "9999:9999"
+    environment:
+      AWS_ACCESS_KEY_ID: "XXX"
+      AWS_SECRET_ACCESS_KEY: "XXX"
+```
+2. Add `jupyterlab` to the end of the `backend/requirements.txt` file.
+3. Open a Terminal window and make sure you're inside the repo root directory (you should see the `docker-composexxx.yml` files if you run `ls` in the Terminal).
+4. Run `docker-compose build` to rebuild the image.
+5. Run `docker-compose up` to start up the containers.
+6. Once the flask-dev container is running, start a new Terminal in the root directory and run `sh docker-shell.sh`.
+7. You should see:
+```
++ docker exec -it metrics-flask-dev bash
+root@2dd2f4d0e170:/app/backend#
+```
+8. Now run:
+```
+jupyter-lab --ip=0.0.0.0 --port=9999 --allow-root --no-browser --NotebookApp.token='' --NotebookApp.password=''
+```
+This will start a new jupyter notebook server running on port 9999.
+
+9. Go to `localhost:9999/` in your favorite browser.
 
 ### Windows
 
