@@ -12,7 +12,7 @@ The app currently supports San Francisco and Portland, but we're working to gene
 
 ## Getting involved
 
-[Our onboarding doc](https://bit.ly/opentransitpdx) is a great way to get started. It'll provide you instructions on joining our GitHub organization, our Slack, our Google Drive, etc.
+[Our onboarding doc](https://github.com/codeforpdx/opentransit-metrics/blob/master/docs/onboarding.md) is a great way to get started. It'll provide you instructions on joining our GitHub organization, our Slack, our Google Drive, etc.
 
 ### Contributing
 
@@ -50,8 +50,8 @@ If you need to install some new dependencies in the Docker images, you can rebui
 
 ### Troubleshooting
 
-| Error message | Solution |
-| --- | --- |
+| Error message                         | Solution                   |
+| ------------------------------------- | -------------------------- |
 | `Module not found: can't resolve ...` | Run `docker-compose build` |
 | `Failed to execute script docker-compose` | Open Docker Desktop app first |
 
@@ -74,7 +74,7 @@ GitHub automatically runs tests for each push to check for eslint errors. If esl
 When you make a Pull Request, we would suggest you deploy your branch to Heroku so that other
 team members can try out your feature.
 
-First, create an account  at [heroku.com](https://heroku.com) and
+First, create an account at [heroku.com](https://heroku.com) and
 [create an app](https://dashboard.heroku.com/apps). Follow the instructions to deploy
 using Heroku Git with an existing Git repository.
 
@@ -95,7 +95,7 @@ Then copy the link to this app and paste it in the PR.
 
 #### How Deployment Works
 
-(**TODO**) Once a PR is merged into master, Google Cloud Build  will automatically build
+(**TODO**) Once a PR is merged into master, Google Cloud Build will automatically build
 the latest code and deploy it to a cluster on Google Kubernetes Engine (GKE).
 The build steps are defined in `cloudbuild.yaml`.
 
@@ -108,19 +108,19 @@ The build steps are defined in `cloudbuild.yaml`.
 
 ### Frontend
 
-- **NPM** - for package management. We explicitly decided to *not* use Yarn, because both
-package managers offer similar performance, we were already using NPM for backend
-package management, and the Yarn roadmap did not offer compelling
-improvements going forward.
-- **React** - Selected for popularity, simple view, and speedy virtual DOM. Code lives in the `/frontend` directory.  It was built using
-[Create React App](https://facebook.github.io/create-react-app/docs/folder-structure).
+- **NPM** - for package management. We explicitly decided to _not_ use Yarn, because both
+  package managers offer similar performance, we were already using NPM for backend
+  package management, and the Yarn roadmap did not offer compelling
+  improvements going forward.
+- **React** - Selected for popularity, simple view, and speedy virtual DOM. Code lives in the `/frontend` directory. It was built using
+  [Create React App](https://facebook.github.io/create-react-app/docs/folder-structure).
 - **Material UI** - which we use over Bootstrap since MUI doesn't rely on jQuery. It has a
-popular React framework and looks great on mobile.
+  popular React framework and looks great on mobile.
 - **Redux** - for state management and to simplify our application and component interaction.
 - **Redux Thunk** - as middleware for Redux.
 - **React Hooks** - to manage interactions with state management.
 - **Functional Components** - We migrated away from ES6 React Components and toward React
-[Functional Components](https://reactjs.org/docs/components-and-props.html) due to the simpler component logic and the ability to use React Hooks that Functional Components offer.
+  [Functional Components](https://reactjs.org/docs/components-and-props.html) due to the simpler component logic and the ability to use React Hooks that Functional Components offer.
 - **ESLint** - Linting set in the format of AirBNB Style.
 - **Prettier** - Code formatter to maintain standard code format for the frontend code.
 - **Husky** - Pre-commit hook to trigger Prettier auto formatting before pushing to Github.
@@ -181,22 +181,23 @@ In order to allow React to automatically recompile the frontend code within the 
 Windows host computer, you can create a `docker-compose.override.yml` to enable CHOKIDAR_USEPOLLING like this:
 
 ```yml
-version: "3.7"
+version: '3.7'
 services:
   react-dev:
     environment:
-      CHOKIDAR_USEPOLLING: "true"
-      CHOKIDAR_INTERVAL: "2500"
+      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_INTERVAL: '2500'
 ```
 
 This setting is not in the main docker-compose.yml file because CHOKIDAR_USEPOLLING causes high CPU/battery usage for developers using Mac OS X,
 and CHOKIDAR_USEPOLLING is not necessary on Mac OS X to automatically recompile the frontend code when it changes.
 
-### Mac M1 
+### Mac M1
+
 If you're developing within Docker on a Mac with an M1 chip, you need to change the docker-compose platform. Create a `docker-compose.override.yml` to enable specify the platform like this:
 
 ```yml
-version: "3.7"
+version: '3.7'
 services:
   flask-dev:
     platform: linux/amd64
@@ -209,6 +210,7 @@ services:
 By default, the app shows statistics for TriMet in Portland, Oregon. You can configure the transit agency displayed in the web app by setting the OPENTRANSIT_AGENCY_IDS environment variable.
 
 Other available agency IDs include:
+
 - `trimet` (TriMet in Portland, Oregon)
 - `portland-sc` (Portland Streetcar)
 - `muni` (San Francisco Muni)
@@ -229,4 +231,4 @@ After changing docker-compose.override.yml, you will need to re-run `docker-comp
 
 Please see [ADVANCED_DEV.md](docs/ADVANCED_DEV.md) for even more advanced information like computing arrival times and deploying to AWS.
 
-See [agencies.md](docs/agencies.md) for configuring for different agencies, and how the front end gets the configuration information.  Important for testing with other devices against your dev machine.
+See [agencies.md](docs/agencies.md) for configuring for different agencies, and how the front end gets the configuration information. Important for testing with other devices against your dev machine.
