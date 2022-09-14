@@ -196,9 +196,11 @@ After changing docker-compose.override.yml, you will need to re-run `docker-comp
 
 #### Debugging the Flask app
 
-For developers using the VS Code editor, there is configuration that supports debugging Python code. To debug the Flask app, the `docker-compose.debug.yml` compose file is configured to listen on port `6789` before starting the app, while the debugger is attached via the "Python: Attach" configuration defined in [`.vscode/launch.json`](.vscode/launch.json). To debug using this configuration, run `docker compose -f docker-compose.debug.yml up` (add the `--build` option if the containers need to be built). Open the "Run and Debug" panel in the VS Code sidebar, then select and run the "Python: Attach" launch configuration.
+For developers using the VS Code editor, there is configuration that supports debugging Python code. To debug the Flask app, the `docker-compose.debug.yml` compose file is configured to listen on port `6789` before starting the app, while the debugger is attached via the "Python: Attach" configuration defined in [`.vscode/launch.json`](.vscode/launch.json).
 
-> **NOTE**: If running on a Mac with an ARM CPU (for example, an M1 or M2 processor), the `docker-compose.override.yml` file will need to be included as an additional file option: `docker compose -f docker-compose.debug.yml -f docker-compose.override.yml up`. See [this article](https://pythonspeed.com/articles/docker-build-problems-mac/) for more details.
+To debug using this configuration, the debug compose file should be used along with the base compose config to start up the services. This can be done by listing the debug compose file explicitly along with the base config, for example, `docker compose -f docker-compose.yml -f docker-compose.debug.yml up` (add the `--build` option if the containers need to be built). Open the "Run and Debug" panel in the VS Code sidebar, then select and run the "Python: Attach" launch configuration.
+
+> **NOTE**: If running on a Mac with an ARM CPU (for example, an M1 or M2 processor), the `docker-compose.override.yml` file will need to be included as an additional file option: `docker compose -f docker-compose.yml -f docker-compose.debug.yml -f docker-compose.override.yml up`. See [this article](https://pythonspeed.com/articles/docker-build-problems-mac/) for more details.
 
 #### Debugging Python command line scripts
 
