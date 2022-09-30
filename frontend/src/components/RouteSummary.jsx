@@ -1,11 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Table, TableBody, TableHead } from '@material-ui/core';
+import Button from '@material-ui/core/Button';
 import SummaryRow from './SummaryRow';
 import SummaryHeaderRow from './SummaryHeaderRow';
 import { metersToMiles } from '../helpers/routeCalculations';
 import { renderDateRange } from '../helpers/dateTime';
-import Button from '@material-ui/core/Button';
 import { fetchDownload } from '../actions/index';
 
 /*
@@ -46,7 +46,6 @@ function RouteSummary(props) {
     intervalMetrics = routeIntervalMetrics;
     intervalMetrics2 = routeIntervalMetrics2;
   }
-
 
   function handleDownload() {
     // setDateRangeParams(localDateRangeParams);
@@ -214,12 +213,12 @@ function RouteSummary(props) {
         </TableBody>
       </Table>
       <Button
-      onClick={handleDownload}
-      color="primary"
-      variant="contained"
-      // disabled={}
+        onClick={handleDownload}
+        color="primary"
+        variant="contained"
+        // disabled={}
       >
-      Download Arrival Data
+        Download Arrival Data
       </Button>
     </>
   );
