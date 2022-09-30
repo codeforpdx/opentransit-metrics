@@ -69,6 +69,12 @@ Before committing, run `dev/docker-lint.sh` (Mac/Linux) or `dev\docker-lint.bat`
 
 GitHub automatically runs tests for each push to check for eslint errors. If eslint reports any style errors, pull requests will show a failing check.
 
+You can configure git to look for any git hooks found in the `.githooks` directory for this project by running the following:
+```sh
+git config --local core.hooksPath .githooks
+```
+Existing githooks include a pre-commit hook that runs eslint automatically if changes include any js files.
+
 ### Deploying to Heroku
 
 When you make a Pull Request, we would suggest you deploy your branch to Heroku so that other

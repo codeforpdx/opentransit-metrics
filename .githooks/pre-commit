@@ -1,0 +1,29 @@
+#!/bin/bash
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Only run eslint check if staged changes include relevant files
+STAGED_FILES=($(git diff --cached --name-only --diff-filter=ACM | grep ".jsx\{0,1\}$"))
+
+if [ -z "$STAGED_FILES" ]; then
+  exit 0
+fi
+
+echo "Staged changes contain js files. Running pre-commit eslint check."
+
+# Run check in docker container since dependencies may not be installed locally
+DEV_DIR=$(cd `dirname $0` && pwd)
+ROOT_DIR=`dirname $DEV_DIR`
+
+docker run -v "$ROOT_DIR/frontend/src:/app/frontend/src" opentransit-metrics-react-dev:latest node_modules/.bin/eslint src --ext .jsx,.js
+
+ESLINTCHECK_EXIT="$?"
+
+if [[ "${ESLINTCHECK_EXIT}" == 0 ]]; then
+  printf "\n\033[42mCOMMIT SUCCEEDED\033[0m\n"
+else
+  printf "\n\033[41mCOMMIT FAILED:\033[0m Fix eslint errors manually or by running dev/docker-lint.sh and try again\n"
+  exit 1
+fi
+
+exit $?
