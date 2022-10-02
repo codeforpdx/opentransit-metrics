@@ -14,7 +14,10 @@ backend/data/*/
 docker-compose.override.yml
 
 .aws/
-.vscode/
+.vscode/*
+
+!.vscode/launch.json
+!.vscode/tasks.json
 
 # Created by https://www.gitignore.io/api/node,macos,flask,python,eclipse,intellij
 # Edit at https://www.gitignore.io/?templates=node,macos,flask,python,eclipse,intellij

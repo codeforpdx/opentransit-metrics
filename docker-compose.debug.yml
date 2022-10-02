@@ -1,0 +1,15 @@
+#
+# docker-compose file configured for starting the flask-dev service
+# with debug config for use with VS Code.
+# Should be started up as follows:
+# - Run `docker compose up` with the `docker-compose.yml` file as the base config.
+#   For example: `docker compose -f "docker-compose.yml" -f "docker-compose.debug.yml" up --build`
+# - Once the flask-dev service has started, attach the VS Code debugger by switching
+#   to the debug sidebar and running the `Python: Attach` config.
+# - Add breakpoints as desired to flask app code.
+version: "3.7"
+services:
+  flask-dev:
+    command: ["sh", "-c", "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:6789 -m flask run --no-debugger --no-reload --host 0.0.0.0 --port 5000"]
+    ports:
+      - "6789:6789"
